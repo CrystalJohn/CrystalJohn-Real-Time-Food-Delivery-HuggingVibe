@@ -1,0 +1,84 @@
+- title: "[BE-2] Create Order API & Validation"
+  body: |
+    ### Assigned Role
+    BE-2 (Order/Real-time/AI)
+    
+    ### Related Flow
+    Flow 1: Order Placement
+    
+    ### Task Description
+    API for customers to place an order. Validate items, prices, calculate total, and set initial status PENDING.
+    
+    ### Acceptance Criteria
+    - [ ] POST /api/orders
+    - [ ] Validate items availability
+    - [ ] Calculate total price server-side
+    - [ ] Trigger 'NEW_ORDER' event to Staff
+  labels: ["backend", "task", "be-order", "order"]
+
+- title: "[BE-2] Order State Machine & Staff Queue"
+  body: |
+    ### Assigned Role
+    BE-2 (Order/Real-time/AI)
+    
+    ### Related Flow
+    Flow 2: Order Processing
+    
+    ### Task Description
+    Implement logic for order status transitions (PENDING -> CONFIRMED -> PREPARING -> READY). API for Staff to view PENDING queue.
+    
+    ### Acceptance Criteria
+    - [ ] GET /api/staff/orders/queue (Limit 4)
+    - [ ] PUT /api/staff/orders/:id/status
+    - [ ] Validate valid status transitions
+  labels: ["backend", "task", "be-order", "order-processing"]
+
+- title: "[BE-2] Driver Order Assignment Logic"
+  body: |
+    ### Assigned Role
+    BE-2 (Order/Real-time/AI)
+    
+    ### Related Flow
+    Flow 3: Delivery
+    
+    ### Task Description
+    APIs for Drivers to view READY orders and Accept delivery. Handle status update to ASSIGNED.
+    
+    ### Acceptance Criteria
+    - [ ] GET /api/driver/orders/available (Status = READY)
+    - [ ] PUT /api/driver/orders/:id/accept
+    - [ ] Ensure one driver per order (Race condition handling)
+  labels: ["backend", "task", "be-order", "delivery"]
+
+- title: "[BE-2] Real-time GPS Tracking Hub"
+  body: |
+    ### Assigned Role
+    BE-2 (Order/Real-time/AI)
+    
+    ### Related Flow
+    Flow 4: Tracking Real-Time
+    
+    ### Task Description
+    WebSocket implementation to handle GPS location updates from Driver and broadcast to Customer.
+    
+    ### Acceptance Criteria
+    - [ ] WebSocket Event: 'DRIVER_LOCATION_UPDATE'
+    - [ ] Broadcast to specific room (Order ID)
+    - [ ] Store last known location (optional/Redis)
+  labels: ["backend", "task", "be-order", "realtime", "gps"]
+
+- title: "[BE-2] AI Suggestion Logic"
+  body: |
+    ### Assigned Role
+    BE-2 (Order/Real-time/AI)
+    
+    ### Related Flow
+    Flow 1: Order Placement
+    
+    ### Task Description
+    Implement logic for suggesting popular items and reorder suggestions based on history.
+    
+    ### Acceptance Criteria
+    - [ ] GET /api/recommendations/popular
+    - [ ] GET /api/recommendations/reorder
+  labels: ["backend", "task", "be-order", "ai"]

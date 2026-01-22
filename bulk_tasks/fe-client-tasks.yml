@@ -1,0 +1,101 @@
+- title: "[FE-1] Setup Customer & Driver App Structure"
+  body: |
+    ### Assigned Role
+    FE-1 (Customer App & Driver App)
+    
+    ### Related Flow
+    Setup & Auth
+    
+    ### Task Description
+    Initialize the mobile/client application (React Native/Flutter/PWA). Setup Navigation and State Management.
+    
+    ### Acceptance Criteria
+    - [ ] Project initialized
+    - [ ] Navigation setup (Auth Stack vs App Stack)
+    - [ ] HTTP Client configured (Axios/etc)
+  labels: ["frontend", "task", "fe-client", "setup"]
+
+- title: "[FE-1] Customer Auth & Profile Screens"
+  body: |
+    ### Assigned Role
+    FE-1 (Customer App & Driver App)
+    
+    ### Related Flow
+    Setup & Auth
+    
+    ### Task Description
+    Implement Login, Register, and Profile management screens for Customer.
+    
+    ### Acceptance Criteria
+    - [ ] Login Screen
+    - [ ] Register Screen
+    - [ ] Profile Update Screen
+  labels: ["frontend", "task", "fe-client", "auth"]
+
+- title: "[FE-1] Customer Home & Menu Screen"
+  body: |
+    ### Assigned Role
+    FE-1 (Customer App & Driver App)
+    
+    ### Related Flow
+    Flow 1: Order Placement
+    
+    ### Task Description
+    Display list of food items, categories, and search functionality.
+    
+    ### Acceptance Criteria
+    - [ ] Menu List UI
+    - [ ] Filter/Search UI
+    - [ ] Item Detail Modal/Screen
+  labels: ["frontend", "task", "fe-client", "menu"]
+
+- title: "[FE-1] Cart & Checkout Flow"
+  body: |
+    ### Assigned Role
+    FE-1 (Customer App & Driver App)
+    
+    ### Related Flow
+    Flow 1: Order Placement
+    
+    ### Task Description
+    Implement Cart management (Add/Remove items) and Checkout screen (Address, Confirm).
+    
+    ### Acceptance Criteria
+    - [ ] Cart Screen with Total calculation
+    - [ ] Checkout Screen
+    - [ ] Order Success Screen
+  labels: ["frontend", "task", "fe-client", "order"]
+
+- title: "[FE-1] Customer Order Tracking (Map)"
+  body: |
+    ### Assigned Role
+    FE-1 (Customer App & Driver App)
+    
+    ### Related Flow
+    Flow 4: Tracking Real-Time
+    
+    ### Task Description
+    Real-time tracking screen showing Order Status timeline and Driver location on Map.
+    
+    ### Acceptance Criteria
+    - [ ] Map Integration (Google Maps/Mapbox)
+    - [ ] Real-time marker update via WebSocket
+    - [ ] Order Status Progress Bar
+  labels: ["frontend", "task", "fe-client", "tracking"]
+
+- title: "[FE-1] Driver App: Job List & Delivery Actions"
+  body: |
+    ### Assigned Role
+    FE-1 (Customer App & Driver App)
+    
+    ### Related Flow
+    Flow 3: Delivery
+    
+    ### Task Description
+    Screens for Driver to view available jobs, accept job, and update delivery status.
+    
+    ### Acceptance Criteria
+    - [ ] Available Jobs List
+    - [ ] Current Delivery Screen
+    - [ ] Status Buttons (Picked Up, Delivered)
+  labels: ["frontend", "task", "fe-client", "driver"]

@@ -1,0 +1,88 @@
+- title: "[BE-1] Setup Project & Database Architecture"
+  body: |
+    ### Assigned Role
+    BE-1 (Core/Admin/System)
+    
+    ### Related Flow
+    Setup & Auth
+    
+    ### Task Description
+    Initialize the backend project structure, setup database connection (PostgreSQL/MySQL), and configure ORM/Migrations.
+    
+    ### Acceptance Criteria
+    - [ ] Project initialized with standard folder structure
+    - [ ] Database connection established
+    - [ ] Migration script for initial tables created
+    - [ ] Docker compose file (optional) ready
+  labels: ["backend", "task", "be-core", "setup"]
+
+- title: "[BE-1] Implement JWT Authentication & RBAC"
+  body: |
+    ### Assigned Role
+    BE-1 (Core/Admin/System)
+    
+    ### Related Flow
+    Setup & Auth
+    
+    ### Task Description
+    Implement Login, Register, Logout APIs and Role-Based Access Control middleware for 4 roles: Admin, Staff, Driver, Customer.
+    
+    ### Acceptance Criteria
+    - [ ] POST /api/auth/register (Customer)
+    - [ ] POST /api/auth/login (All roles)
+    - [ ] Auth Middleware verifies JWT token
+    - [ ] Role Guard blocks unauthorized access
+  labels: ["backend", "task", "be-core", "auth"]
+
+- title: "[BE-1] Manage Menu APIs (CRUD)"
+  body: |
+    ### Assigned Role
+    BE-1 (Core/Admin/System)
+    
+    ### Related Flow
+    Flow 1: Order Placement
+    
+    ### Task Description
+    Create APIs to manage food items and categories. Admin/Staff can Create/Update/Delete. Customers can Read.
+    
+    ### Acceptance Criteria
+    - [ ] GET /api/menu (Public)
+    - [ ] POST /api/menu (Admin/Staff)
+    - [ ] PUT /api/menu/:id (Admin/Staff)
+    - [ ] DELETE /api/menu/:id (Admin/Staff) - Soft delete if active orders exist
+  labels: ["backend", "task", "be-core", "menu"]
+
+- title: "[BE-1] Driver Recruitment APIs"
+  body: |
+    ### Assigned Role
+    BE-1 (Core/Admin/System)
+    
+    ### Related Flow
+    Flow 5: Driver Recruitment
+    
+    ### Task Description
+    APIs for handling driver applications: Submit application, View list (Admin), Approve/Reject (Admin), Toggle recruitment status.
+    
+    ### Acceptance Criteria
+    - [ ] POST /api/drivers/apply
+    - [ ] GET /api/admin/driver-applications
+    - [ ] PUT /api/admin/driver-applications/:id/status (Approve/Reject)
+    - [ ] POST /api/admin/recruitment/toggle
+  labels: ["backend", "task", "be-core", "recruitment"]
+
+- title: "[BE-1] Admin Dashboard Statistics APIs"
+  body: |
+    ### Assigned Role
+    BE-1 (Core/Admin/System)
+    
+    ### Related Flow
+    Flow 6: Admin Dashboard
+    
+    ### Task Description
+    APIs to retrieve dashboard metrics: Total orders, Total revenue, Order status breakdown.
+    
+    ### Acceptance Criteria
+    - [ ] GET /api/admin/stats/overview
+    - [ ] GET /api/admin/stats/revenue
+    - [ ] Performance optimized for aggregation queries
+  labels: ["backend", "task", "be-core", "stats"]
