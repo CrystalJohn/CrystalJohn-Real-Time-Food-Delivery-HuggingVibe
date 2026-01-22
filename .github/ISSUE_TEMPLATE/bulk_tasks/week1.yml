@@ -1,0 +1,168 @@
+tasks:
+  - title: "[V1][SETUP] Monorepo base + API connect Mongo + /health"
+    labels: ["setup", "chore", "backend", "be-core"]
+    owner: "BE-1"
+    what: |
+      - Setup structure apps/packages theo scope
+      - NestJS bootstrap + config env
+      - Mongo connection OK
+      - Add GET /health
+    api: |
+      REST:
+      - GET /health
+    done: |
+      - [ ] API chạy local, connect Mongo OK
+      - [ ] /health trả OK
+      - [ ] README có bước chạy
+
+  - title: "[V1][SETUP] Docker compose Mongo + .env.example"
+    labels: ["setup", "chore"]
+    owner: "BE-1"
+    what: |
+      - Create docker-compose.yml for MongoDB
+      - Add .env.example cho API
+      - Document run steps
+    done: |
+      - [ ] docker compose up -d chạy được
+      - [ ] Có .env.example + hướng dẫn
+
+  - title: "[V1][AUTH] Register/Login (JWT) + hash password"
+    labels: ["backend", "auth", "be-core"]
+    owner: "BE-1"
+    what: |
+      - Implement register/login
+      - Hash password
+      - Return JWT access token
+    api: |
+      REST:
+      - POST /auth/register
+      - POST /auth/login
+    done: |
+      - [ ] Register OK
+      - [ ] Login OK
+      - [ ] JWT verify OK
+
+  - title: "[V1][AUTH] RBAC guard: ADMIN/STAFF/DRIVER/CUSTOMER"
+    labels: ["backend", "auth", "be-core"]
+    owner: "BE-1"
+    what: |
+      - Add JWT guard
+      - Add Roles guard + decorator
+      - Protect sample endpoints by role
+    done: |
+      - [ ] Endpoint test pass/fail đúng role
+      - [ ] Có ví dụ endpoint protected
+
+  - title: "[V1][AUTH] FE Login pages + token storage (Customer/Driver/Admin-Staff)"
+    labels: ["frontend", "auth"]
+    owner: "FE-ALL"
+    what: |
+      - Customer App: Login page + save token
+      - Driver App: Login page + save token
+      - Admin/Staff Portal: Login page + save token
+      - Logout clears token
+    api: |
+      REST:
+      - POST /auth/login
+    done: |
+      - [ ] Login thành công lưu token
+      - [ ] Logout xoá token
+      - [ ] Sai pass hiển thị error
+
+  - title: "[V1][MENU] Seed data: 8–12 menu items + 4 users roles"
+    labels: ["backend", "menu", "setup", "be-core"]
+    owner: "BE-1"
+    what: |
+      - Seed 1 admin, 1 staff, 1 driver, 1 customer
+      - Seed 8–12 menu items
+      - Provide a seed command/script
+    done: |
+      - [ ] Seed chạy 1 lệnh
+      - [ ] DB có đủ users + menu
+
+  - title: "[V1][MENU] GET /menu for Customer"
+    labels: ["backend", "menu", "be-core"]
+    owner: "BE-1"
+    what: |
+      - Implement GET /menu
+      - Return list items: name, description, price, imageUrl?, isAvailable, category?
+    api: |
+      REST:
+      - GET /menu
+    done: |
+      - [ ] Customer gọi GET menu thấy list items
+      - [ ] Response ổn định để FE dùng
+
+  - title: "[V1][MENU] Customer UI: render menu list (loading/empty/error)"
+    labels: ["frontend", "menu", "fe-client", "customer"]
+    owner: "FE-1"
+    what: |
+      - Fetch GET /menu
+      - Render menu list + item card
+      - Handle loading/empty/error
+    api: |
+      REST:
+      - GET /menu
+    done: |
+      - [ ] Hiển thị menu từ API
+      - [ ] Loading/empty/error states đủ
+
+  - title: "[V1][ORDER] POST /orders create order (status=PENDING)"
+    labels: ["backend", "order", "be-order"]
+    owner: "BE-2"
+    what: |
+      - Create order endpoint
+      - Validate items + basic total
+      - Default status = PENDING
+    api: |
+      REST:
+      - POST /orders
+    done: |
+      - [ ] Create order OK từ customer token
+      - [ ] Order lưu DB đúng schema tối thiểu
+
+  - title: "[V1][ORDER] Customer UI: Cart + Checkout -> Create Order"
+    labels: ["frontend", "order", "fe-client", "customer"]
+    owner: "FE-1"
+    what: |
+      - Cart: add/remove/update quantity
+      - Checkout: input address + confirm
+      - Call POST /orders
+    api: |
+      REST:
+      - POST /orders
+    done: |
+      - [ ] Cart hoạt động
+      - [ ] Checkout tạo order thành công
+      - [ ] Hiển thị orderId hoặc message thành công
+
+  - title: "[V1][FE-SETUP] Customer web app (React+Vite) + routing"
+    labels: ["frontend", "setup", "fe-client", "customer"]
+    owner: "FE-1"
+    what: |
+      - Init React+Vite project
+      - Routing basic + auth state skeleton
+    done: |
+      - [ ] Run local OK
+      - [ ] Có routing cơ bản
+
+  - title: "[V1][FE-SETUP] Driver web app (React+Vite) + routing"
+    labels: ["frontend", "setup", "fe-client", "driver"]
+    owner: "FE-1"
+    what: |
+      - Init React+Vite project
+      - Routing basic + auth state skeleton
+    done: |
+      - [ ] Run local OK
+      - [ ] Có routing cơ bản 
+
+  - title: "[V1][FE-SETUP] Admin/Staff portal + layout (sidebar/header) + routing"
+    labels: ["frontend", "setup", "fe-portal", "admin", "staff"]
+    owner: "FE-2"
+    what: |
+      - Init React+Vite project
+      - Layout dashboard (sidebar/header)
+      - Routes placeholders: dashboard/orders/menu
+    done: |
+      - [ ] Run local OK
+      - [ ] Có layout + navigation
