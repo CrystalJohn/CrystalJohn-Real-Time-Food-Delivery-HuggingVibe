@@ -1,0 +1,1 @@
+// Adapter over EventEmitter2
