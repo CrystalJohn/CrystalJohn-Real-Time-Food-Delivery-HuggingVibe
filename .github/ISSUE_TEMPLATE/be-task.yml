@@ -1,0 +1,61 @@
+name: ⚙️ Backend Task
+description: Create a task for Backend team (BE-1 Core / BE-2 Order)
+title: "[BE] "
+labels: ["backend", "task"]
+assignees: []
+body:
+  - type: dropdown
+    id: role
+    attributes:
+      label: Assigned Role
+      description: Who is responsible for this task?
+      options:
+        - "BE-1 (Core/Admin/System)"
+        - "BE-2 (Order/Real-time/AI)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: flow
+    attributes:
+      label: Related Flow
+      description: Which flow does this task belong to?
+      options:
+        - "Setup & Auth"
+        - "Flow 1: Order Placement"
+        - "Flow 2: Order Processing"
+        - "Flow 3: Delivery"
+        - "Flow 4: Tracking Real-Time"
+        - "Flow 5: Driver Recruitment"
+        - "Flow 6: Admin Dashboard"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: A clear and concise description of what needs to be done.
+      placeholder: "Implement API for..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: List the requirements that must be met.
+      value: |
+        - [ ] API Endpoint: (Method) /api/v1/...
+        - [ ] Request Body/Params defined
+        - [ ] Response format (Success/Error) defined
+        - [ ] Unit Tests passed
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Notes
+      description: Database schema changes, algorithms, or libraries to use.
+      placeholder: "Use WebSocket event 'NEW_ORDER'..."

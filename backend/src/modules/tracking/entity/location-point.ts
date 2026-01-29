@@ -1,0 +1,1 @@
+// Location point entity

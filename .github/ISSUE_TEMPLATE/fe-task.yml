@@ -1,0 +1,61 @@
+name: 🎨 Frontend Task
+description: Create a task for Frontend team (FE-1 Client / FE-2 Portal)
+title: "[FE] "
+labels: ["frontend", "task"]
+assignees: []
+body:
+  - type: dropdown
+    id: role
+    attributes:
+      label: Assigned Role
+      description: Who is responsible for this task?
+      options:
+        - "FE-1 (Customer App & Driver App)"
+        - "FE-2 (Admin Dashboard & Staff Portal)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: flow
+    attributes:
+      label: Related Flow
+      description: Which flow does this task belong to?
+      options:
+        - "Setup & Auth"
+        - "Flow 1: Order Placement"
+        - "Flow 2: Order Processing"
+        - "Flow 3: Delivery"
+        - "Flow 4: Tracking Real-Time"
+        - "Flow 5: Driver Recruitment"
+        - "Flow 6: Admin Dashboard"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: A clear and concise description of the UI/UX implementation.
+      placeholder: "Create screen for..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: UI behavior and integration requirements.
+      value: |
+        - [ ] UI matches design/mockup
+        - [ ] Responsive on (Mobile/Desktop)
+        - [ ] API Integration completed
+        - [ ] Error handling (Toasts/Alerts) implemented
+    validations:
+      required: true
+
+  - type: input
+    id: mockup
+    attributes:
+      label: Mockup/Figma Link
+      description: Link to the design file or screenshot.
+      placeholder: "https://www.figma.com/..."
