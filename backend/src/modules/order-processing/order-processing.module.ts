@@ -1,1 +1,4 @@
-// Order processing module
+import { Module } from '@nestjs/common';
+
+@Module({})
+export class OrderProcessingModule {}
