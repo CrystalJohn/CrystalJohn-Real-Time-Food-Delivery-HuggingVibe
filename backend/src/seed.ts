@@ -1,5 +1,5 @@
 // Dữ liệu mồi để seed database
-//  chạy npx ts-node src/seed.ts để thiết lập sinh data và kết nối với db
+//  chạy npx ts-node src/seed.ts để thiết lập sinh data và kết nối với 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { OrderMongoRepository } from './modules/ordering/infrastructure/persistence/order.repo.mongo';
