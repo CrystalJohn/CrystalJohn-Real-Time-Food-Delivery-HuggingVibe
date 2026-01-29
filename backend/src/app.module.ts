@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
 
 import { ConfigModule } from './infrastructure/config/config.module';
 import { MongoModule } from './infrastructure/mongo/mongo.module';
@@ -20,5 +21,6 @@ import { TrackingModule } from './modules/tracking/tracking.module';
     DeliveryModule,
     TrackingModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
