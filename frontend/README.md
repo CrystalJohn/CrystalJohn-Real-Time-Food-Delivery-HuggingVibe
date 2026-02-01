@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Food Delivery - Frontend
 
-## Getting Started
+A food delivery web application built with **Next.js 16**, **React 19**, **TypeScript**, and **shadcn/ui**.
 
-First, run the development server:
+## 🚀 Getting Started
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Directory Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+frontend/src/
+├── app/                          # Pages (Next.js App Router)
+│   ├── layout.tsx                # Root layout
+│   ├── providers.tsx             # Context providers wrapper
+│   ├── (customer)/               # Customer pages
+│   │   ├── menu/page.tsx
+│   │   ├── cart/page.tsx
+│   │   └── orders/[orderId]/page.tsx
+│   ├── (staff)/                  # Staff pages
+│   ├── (driver)/                 # Driver pages
+│   └── (admin)/                  # Admin pages
+│
+├── components/                   # All UI components
+│   ├── ui/                       # shadcn/ui (auto-generated)
+│   ├── menu/                     # Menu feature components
+│   ├── cart/                     # Cart feature components
+│   ├── order/                    # Order feature components
+│   └── shared/                   # Shared/common components
+│
+├── hooks/                        # Custom React hooks
+│   ├── useCart.ts
+│   ├── useOrder.ts
+│   └── ...
+│
+├── services/                     # API service layer
+│   ├── api.ts                    # Base HTTP client
+│   ├── order.service.ts
+│   └── ...
+│
+├── contexts/                     # React Context providers
+│   ├── AuthContext.tsx
+│   └── CartContext.tsx
+│
+├── types/                        # TypeScript type definitions
+│   ├── order.ts
+│   ├── menu.ts
+│   └── ...
+│
+└── lib/                          # Utilities & constants
+    ├── utils.ts
+    └── constants.ts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🧩 Page Structure
 
-## Learn More
+Each page follows this structure:
 
-To learn more about Next.js, take a look at the following resources:
+```
+┌──────────────────────────────────────────────────────────────┐
+│                         PAGE                                  │
+│  - Import hooks & components                                  │
+│  - No business logic here                                     │
+│  - Example: app/(customer)/menu/page.tsx                      │
+└─────────────────────────┬────────────────────────────────────┘
+                          │ uses
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│                         HOOK                                  │
+│  - Business logic & state management                          │
+│  - Calls services for API                                     │
+│  - Example: hooks/useOrder.ts                                 │
+└─────────────────────────┬────────────────────────────────────┘
+                          │ calls
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│                        SERVICE                                │
+│  - API calls only                                             │
+│  - Returns data from backend                                  │
+│  - Example: services/order.service.ts                         │
+└──────────────────────────────────────────────────────────────┘
+```
+Simple Rules
+Layer	Responsibility	Example
+Page	Compose UI, no logic	page.tsx imports hook + component
+Hook	Handle logic & state	useOrder() manages loading, error, data
+Service	Call API endpoints	orderService.getById(id)
+Component	Render UI from props	<OrderDetail order={order} />
+Context	Share global state	AuthContext, CartContext
+Types	Define data shapes	interface Order { ... }
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧪 User Login Flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. User submits login form
+2. Call authService.login(email, password)
+3. Store token in localStorage (auth.storage.ts)
+4. Update AuthContext with user info
+5. Redirect based on user role:
+   - customer → /menu
+   - staff    → /staff/orders
+   - driver   → /driver/jobs
+   - admin    → /admin/dashboard
