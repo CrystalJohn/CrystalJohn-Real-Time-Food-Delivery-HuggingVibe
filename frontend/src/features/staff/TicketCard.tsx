@@ -12,13 +12,13 @@ export function TicketCard({ ticket, onAction }: TicketCardProps) {
   const getStatusBadge = () => {
     switch (ticket.status) {
       case 'PENDING':
-        return <Badge variant="warning">Pending</Badge>;
+        return <Badge variant="secondary">Pending</Badge>;
       case 'IN_PROGRESS':
-        return <Badge variant="info">In Progress</Badge>;
+        return <Badge>In Progress</Badge>;
       case 'READY':
-        return <Badge variant="success">Ready</Badge>;
+        return <Badge variant="default">Ready</Badge>;
       case 'REJECTED':
-        return <Badge variant="danger">Rejected</Badge>;
+        return <Badge variant="destructive">Rejected</Badge>;
     }
   };
 

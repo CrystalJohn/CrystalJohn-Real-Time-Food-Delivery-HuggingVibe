@@ -9,7 +9,7 @@ export function OrderDetail({ order }: OrderDetailProps) {
     <div>
       <p>Order #{order.id}</p>
       <p>Status: {order.status}</p>
-      <p>Total: {order.total}</p>
+      <p>Total: {order.totalAmount}</p>
       <ul>
         {order.items.map((item) => (
           <li key={item.id}>

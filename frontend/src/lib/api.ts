@@ -1,45 +1,138 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
+import { getToken, clearAuth } from './auth-storage';
 
-export interface ApiError {
-  message: string;
-  status: number;
-}
+// Base URL from environment variables (Next.js uses process.env)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token');
-}
+// ============================================================================
+// Axios Instance
+// ============================================================================
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
-  
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-  });
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,  // tự động fail sau 10s
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-  if (!res.ok) {
-    const error: ApiError = {
-      message: (await res.json().catch(() => ({})))?.message ?? res.statusText,
-      status: res.status,
-    };
-    throw error;
+// ============================================================================
+// Request Interceptor - Auto Attach JWT for all requests
+// ============================================================================
+
+axiosInstance.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = getToken();  // check token từ auth-storage (LocalStorage)
+    if (token) {  
+      config.headers.Authorization = `Bearer ${token}`;   // có token thì attach vào header
+    }
+    return config;
+  }, 
+  (error: AxiosError) => {
+    return Promise.reject(error);   // nếu req fail thì reject ko retry
   }
+);
 
-  return res.json() as Promise<T>;
+// ============================================================================
+// Response Interceptor - Handle 401
+// ============================================================================
+
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response.data;   // Case success, trả về data luôn
+  },
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      clearAuth(); // xoá token & user data trong localStorage
+
+      if (typeof window !== 'undefined') {  // check brower trc khi redirect
+        window.location.href = '/login'; // redirect tới login
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// ============================================================================
+// Error Handling
+// ============================================================================
+
+export class ApiError extends Error {
+  constructor(
+    public statusCode: number,
+    public message: string,
+    public errors?: Record<string, string[]>
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }
+
+function transformError(error: AxiosError): ApiError {
+  if (error.response) {
+    const data = error.response.data as Record<string, unknown>;
+    
+    return new ApiError(
+      error.response.status,
+      (data?.message as string) || error.message,
+      data?.errors as Record<string, string[]> | undefined
+    );
+  } else if (error.request) {
+    return new ApiError(0, 'Network error. Please check your connection.');
+  } else {
+    return new ApiError(0, error.message);
+  }
+}
+
+// ============================================================================
+// Type-Safe API Methods
+// ============================================================================
 
 export const api = {
-  get: <T>(path: string) => request<T>(path, { method: 'GET' }),
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
-  put: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
-  patch: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
-  delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  // Get request
+  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      // Response interceptor đã return response.data, nên không cần .data ở đây
+      return await axiosInstance.get(url, config) as T;
+    } catch (error) {
+      throw transformError(error as AxiosError);
+    }
+  },
+  // Đặt <T> là type parameter  
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      return await axiosInstance.post(url, data, config) as T;
+    } catch (error) {
+      throw transformError(error as AxiosError);
+    }
+  },
+
+  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      return await axiosInstance.put(url, data, config) as T;
+    } catch (error) {
+      throw transformError(error as AxiosError);
+    }
+  },
+
+  async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      return await axiosInstance.patch(url, data, config) as T;
+    } catch (error) {
+      throw transformError(error as AxiosError);
+    }
+  },
+
+  // Delete request
+  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      return await axiosInstance.delete(url, config) as T;
+    } catch (error) {
+      throw transformError(error as AxiosError);
+    }
+  },
 };
+
+export { axiosInstance };
+export const API_URL = API_BASE_URL;
+export default api;

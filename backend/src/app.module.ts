@@ -10,12 +10,14 @@ import { OrderProcessingModule } from './modules/order-processing/order-processi
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { TrackingModule } from './modules/tracking/tracking.module';
 
+import { AuthModule } from './modules/auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule,
     MongoModule,
     EventingModule,
-
+    AuthModule,
     OrderingModule,
     OrderProcessingModule,
     DeliveryModule,

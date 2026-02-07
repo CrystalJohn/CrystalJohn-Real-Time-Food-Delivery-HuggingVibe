@@ -83,7 +83,7 @@ export function DriverTable() {
                   <div className="text-sm text-gray-500">{driver.phone || 'N/A'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <Badge variant="success">Active</Badge>
+                  <Badge variant="default">Active</Badge>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <Button size="sm" variant="ghost">

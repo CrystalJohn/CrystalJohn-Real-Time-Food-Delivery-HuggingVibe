@@ -14,13 +14,13 @@ export function JobCard({ job, onAction }: JobCardProps) {
       case 'PENDING':
         return <Badge variant="default">Available</Badge>;
       case 'ASSIGNED':
-        return <Badge variant="info">Assigned</Badge>;
+        return <Badge variant="outline">Assigned</Badge>;
       case 'PICKED_UP':
-        return <Badge variant="warning">Picked Up</Badge>;
+        return <Badge variant="secondary">Picked Up</Badge>;
       case 'DELIVERED':
-        return <Badge variant="success">Delivered</Badge>;
+        return <Badge variant="default">Delivered</Badge>;
       case 'CANCELLED':
-        return <Badge variant="danger">Cancelled</Badge>;
+        return <Badge variant="destructive">Cancelled</Badge>;
     }
   };
 
