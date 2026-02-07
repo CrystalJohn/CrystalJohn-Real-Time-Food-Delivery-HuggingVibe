@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
-import { getToken, clearAuth } from './auth-storage';
+import { authStorage } from '@/features/auth/auth.storage';
 
 // Base URL from environment variables (Next.js uses process.env)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -22,7 +22,7 @@ const axiosInstance: AxiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getToken();  // check token từ auth-storage (LocalStorage)
+    const token = authStorage.getToken();  // check token từ auth-storage (LocalStorage)
     if (token) {  
       config.headers.Authorization = `Bearer ${token}`;   // có token thì attach vào header
     }
@@ -43,7 +43,7 @@ axiosInstance.interceptors.response.use(
   },
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      clearAuth(); // xoá token & user data trong localStorage
+      authStorage.removeToken(); // xoá token trong localStorage
 
       if (typeof window !== 'undefined') {  // check brower trc khi redirect
         window.location.href = '/login'; // redirect tới login

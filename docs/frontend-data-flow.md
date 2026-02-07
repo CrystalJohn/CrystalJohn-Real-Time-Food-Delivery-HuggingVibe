@@ -62,8 +62,8 @@ flowchart TB
     CART -.-> ORDERS
     
     %% Shared
-    COMPONENTS -.-> ROUTES
     UI -.-> FEATURES
+    LAYOUT -.-> ROUTES
     LIB -.-> FEATURES
     TYPES -.-> FEATURES
     
@@ -525,21 +525,30 @@ frontend/src/
 │   │       ├── page.tsx
 │   │       └── [orderId]/page.tsx
 │   ├── (staff)/                  # Route group: Staff
-│   │   └── orders/page.tsx
+│   │   └── tickets/page.tsx
 │   ├── login/page.tsx
 │   ├── layout.tsx                # Root layout
 │   ├── providers.tsx             # Context providers
 │   └── globals.scss
-├── components/                   # Shared React components
-│   ├── layout/                   # Layout components
+├── components/                   # Shared (non-domain) components
+│   ├── layout/                   # Layout wrappers
 │   │   ├── Header.tsx
 │   │   ├── BottomNav.tsx
 │   │   ├── Sidebar.tsx
-│   │   └── PageContainer.tsx
-│   ├── cart/
-│   ├── menu/
-│   ├── order/
-│   └── shared/
+│   │   ├── PageContainer.tsx
+│   │   └── index.ts
+│   ├── shared/                   # Shared generic components
+│   │   └── PageHeader.tsx
+│   └── ui/                       # shadcn/ui primitives
+│       ├── Badge.tsx
+│       ├── Button.tsx
+│       ├── Card.tsx
+│       ├── Dialog.tsx
+│       ├── Input.tsx
+│       ├── Label.tsx
+│       ├── Modal.tsx
+│       ├── Spinner.tsx
+│       └── index.ts
 ├── features/                     # Feature-Based Architecture
 │   ├── auth/                     # Auth feature
 │   │   ├── AuthContext.tsx       # React Context
@@ -590,14 +599,6 @@ frontend/src/
 │       ├── StatsCards.tsx
 │       ├── DriverTable.tsx
 │       └── index.ts
-├── components/ui/                # Shared UI components
-│   ├── Button.tsx
-│   ├── Card.tsx
-│   ├── Input.tsx
-│   ├── Badge.tsx
-│   ├── Modal.tsx
-│   ├── Spinner.tsx
-│   └── index.ts
 ├── lib/                          # Utilities
 │   ├── api.ts                    # HTTP Client
 │   ├── constants.ts

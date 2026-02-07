@@ -28,7 +28,7 @@
 ## Tech Stack
 
 - **Backend**: NestJS + MongoDB (Mongoose), Modular Monolith + Event-Driven
-- **Frontend**: Next.js 16 + React 19, Feature modules (BCE pattern)
+- **Frontend**: Next.js 16 + React 19, Feature-based modules (`features/` pattern)
 - **Realtime**: WebSocket (Nest Gateway)
 - **Maps**: OpenStreetMap (Leaflet.js)
 
@@ -85,31 +85,31 @@ flowchart TB
 
 | Task | Task Description | Assignment | Output | Status |
 |------|------------------|------------|--------|--------|
-| M1-BE-01 | **Project Setup**: Tạo `.env` (MONGO_URI, JWT_SECRET, PORT). Hoàn thiện ConfigModule với env validation. MongoModule với connection retry. Thêm `GET /health` verify DB connection. | BE1 + BE2 | Health check endpoint hoạt động | ⬜ |
-| M1-BE-02 | **EventingModule**: Định nghĩa `EventBusPort` interface với method `publish<T>(event: T): void`. Implement `EventBusEventEmitter` adapter dùng EventEmitter2. Tạo base `DomainEvent` class (eventId, occurredOn, eventType). | BE1 | Event bus có thể inject và publish | ⬜ |
-| M1-BE-03 | **Auth Module**: User schema (email, passwordHash, role: CUSTOMER/STAFF/DRIVER/ADMIN, createdAt). `POST /auth/register` hash password bcrypt, validate email unique. `POST /auth/login` verify + return JWT {userId, role, exp: 7d}. `GET /auth/me` return user info. | BE2 | 3 auth endpoints hoạt động | ⬜ |
-| M1-BE-04 | **Authorization Guards**: Tạo `@Roles(...roles)` decorator. `JwtAuthGuard` verify token và attach user to request. `RolesGuard` check payload.role. `@Public()` decorator cho public endpoints. Setup global: JwtAuthGuard → RolesGuard. | BE2 | Protected routes chặn unauthorized | ⬜ |
-| M1-BE-05 | **Seed Users**: Script tạo 4 test users mỗi role (customer@test.com, staff@test.com, driver@test.com, admin@test.com). Password: "123456". Chạy được nhiều lần không duplicate. | BE1 + BE2 | `npm run seed` tạo 4 users | ⬜ |
-| M1-FE-01 | **Next.js Setup**: Khởi tạo Next.js 16 với App Router. Cấu hình TypeScript, ESLint, Prettier. Setup folder structure theo BCE pattern. | FE1 | `npm run dev` chạy được | ⬜ |
-| M1-FE-02 | **API Infrastructure**: Tạo API client với axios/fetch wrapper trong `lib/`. Auth storage (localStorage). Auto attach JWT header. Handle 401 redirect to login. | FE1 | `src/lib/api.ts`, `src/lib/auth-storage.ts` hoàn chỉnh | ⬜ |
-| M1-FE-03 | **Route Groups**: Tạo route groups `(customer)`, `(staff)`, `(driver)`, `(admin)`. Mỗi group có layout riêng. Setup middleware check role. | FE1 + FE2 | 4 route groups với layouts | ⬜ |
-| M1-FE-04 | **Login Page**: Form login (email, password). Gọi `POST /auth/login`. Lưu JWT vào storage. AuthContext với user state + login/logout methods. Redirect theo role sau login. | FE1 | `/login` hoạt động end-to-end | ⬜ |
+| M1-BE-01 | **Project Setup**: Tạo `.env` (MONGO_URI, JWT_SECRET, PORT). Hoàn thiện ConfigModule với env validation. MongoModule với connection retry. Thêm `GET /health` verify DB connection. | BE1 + BE2 | Health check endpoint hoạt động | 🔄 |
+| M1-BE-02 | **EventingModule**: Định nghĩa `EventBusPort` interface với method `publish<T>(event: T): void`. Implement `EventBusEventEmitter` adapter dùng EventEmitter2. Tạo base `DomainEvent` class (eventId, occurredOn, eventType). | BE1 | Event bus có thể inject và publish | ✅ |
+| M1-BE-03 | **Auth Module**: User schema (email, passwordHash, role: CUSTOMER/STAFF/DRIVER/ADMIN, createdAt). `POST /auth/register` hash password bcrypt, validate email unique. `POST /auth/login` verify + return JWT {userId, role, exp: 7d}. `GET /auth/me` return user info. | BE2 | 3 auth endpoints hoạt động | ✅ |
+| M1-BE-04 | **Authorization Guards**: Tạo `@Roles(...roles)` decorator. `JwtAuthGuard` verify token và attach user to request. `RolesGuard` check payload.role. `@Public()` decorator cho public endpoints. Setup global: JwtAuthGuard → RolesGuard. | BE2 | Protected routes chặn unauthorized | ✅ |
+| M1-BE-05 | **Seed Users**: Script tạo 4 test users mỗi role (customer@test.com, staff@test.com, driver@test.com, admin@test.com). Password: "123456". Chạy được nhiều lần không duplicate. | BE1 + BE2 | `npm run seed` tạo 4 users | 🔄 |
+| M1-FE-01 | **Next.js Setup**: Khởi tạo Next.js 16 với App Router. Cấu hình TypeScript, ESLint, Prettier. Setup folder structure theo feature-based pattern. | FE1 | `npm run dev` chạy được | ✅ |
+| M1-FE-02 | **API Infrastructure**: Tạo API client với axios wrapper trong `lib/api.ts`. Auth storage (`features/auth/auth.storage.ts`). Auto attach JWT header via interceptor. Handle 401 redirect to login. Error transformation với `ApiError` class. | FE1 | `src/lib/api.ts`, `src/features/auth/auth.storage.ts` hoàn chỉnh | ✅ |
+| M1-FE-03 | **Route Groups + Layouts**: Tạo layout riêng cho mỗi route group `(customer)`, `(staff)`, `(driver)`, `(admin)`. Customer layout với BottomNav. Staff/Admin layout với Sidebar. Driver layout với BottomNav. | FE1 + FE2 | 4 route groups với layouts | 🔄 |
+| M1-FE-04 | **Login Page**: Form login (email, password). Gọi `POST /auth/login`. Lưu JWT vào storage. AuthContext với user state + login/logout methods. Redirect theo role sau login. | FE1 | `/login` hoạt động end-to-end | ✅ |
 | M1-FE-05 | **Route Protection**: Middleware check JWT valid. Redirect về /login nếu chưa auth. Redirect về trang phù hợp nếu sai role (vd: customer vào /admin → redirect). | FE2 | Unauthorized access bị chặn | ⬜ |
 
 ## Tuần 3-4: Flow 1 - Ordering (BE1 + FE1)
 
 | Task | Task Description | Assignment | Output | Status |
 |------|------------------|------------|--------|--------|
-| M1-BE-06 | **Ordering Module**: Tạo folder structure BCE (boundary/control/entity). Order entity với fields: customerId, items[], totalAmount, status, deliveryAddress, createdAt. OrderStatus enum: PENDING, CONFIRMED, PREPARING, READY, DELIVERING, DELIVERED, CANCELLED. | BE1 | `src/modules/ordering/` structure | ⬜ |
-| M1-BE-07 | **Order Repository**: Mongoose schema cho Order. `OrderRepoMongo` implement interface với methods: save(), findById(), findByCustomerId(), updateStatus(). | BE1 | `orders` collection hoạt động | ⬜ |
+| M1-BE-06 | **Ordering Module**: Tạo folder structure (boundary/control/entity). Order entity với fields: customerId, items[], totalAmount, status, deliveryAddress, createdAt. OrderStatus enum: PENDING, CONFIRMED, PREPARING, READY, DELIVERING, DELIVERED, CANCELLED. | BE1 | `src/modules/ordering/` structure | 🔄 |
+| M1-BE-07 | **Order Repository**: Mongoose schema cho Order. `OrderRepoMongo` implement interface với methods: save(), findById(), findByCustomerId(), updateStatus(). | BE1 | `orders` collection hoạt động | ✅ |
 | M1-BE-08 | **Menu Module**: MenuItem schema (name, description, price, category, imageUrl, available). Seed 10+ menu items với categories (Appetizer, Main, Drink, Dessert). `GET /menu` trả list có thể filter by category. | BE1 | `GET /menu` trả danh sách món | ⬜ |
 | M1-BE-09 | **PlaceOrderUseCase**: Validate items tồn tại và available. Tính totalAmount từ menu prices. Tạo Order với status PENDING. Publish `OrderPlacedEvent` qua EventBus. Return orderId. | BE1 | `POST /orders` tạo order + emit event | ⬜ |
 | M1-BE-10 | **GetOrderUseCase**: Lấy order by ID. Check ownership (customer chỉ xem order của mình, staff/admin xem all). Return order với items populated (name, price). | BE1 | `GET /orders/:id` với authorization | ⬜ |
 | M1-BE-11 | **GetCustomerOrdersUseCase**: Lấy danh sách orders của customer. Support pagination (page, limit). Sort by createdAt desc. Filter by status optional. | BE1 | `GET /orders?customerId=&status=&page=` | ⬜ |
-| M1-FE-06 | **Menu Page**: Fetch và hiển thị danh sách món từ API. Filter tabs theo category. Search by name. Loading skeleton khi fetch. | FE1 | `/(customer)/menu` hiển thị menu | ⬜ |
-| M1-FE-07 | **MenuItemCard**: Component hiển thị 1 món (image, name, price, description truncate). Nút "Add to Cart" với quantity selector. Hiện badge nếu đã có trong cart. | FE1 | Component reusable | ⬜ |
-| M1-FE-08 | **Cart State**: CartContext quản lý cart items. useCart hook với methods: addItem, removeItem, updateQuantity, clearCart, getTotal. Persist cart vào localStorage. | FE1 | Cart state hoạt động across pages | ⬜ |
-| M1-FE-09 | **Cart Page**: Hiển thị cart items với quantity controls. Hiện subtotal, delivery fee, total. Form nhập delivery address. Nút "Place Order" disabled nếu cart empty. | FE1 | `/(customer)/cart` hoàn chỉnh | ⬜ |
+| M1-FE-06 | **Menu Page**: Fetch và hiển thị danh sách món từ API. Filter tabs theo category. Search by name. Loading skeleton khi fetch. | FE1 | `/(customer)/menu` hiển thị menu | ✅ |
+| M1-FE-07 | **MenuItemCard**: Component hiển thị 1 món (image, name, price, description truncate). Nút "Add to Cart" với quantity selector. Hiện badge nếu đã có trong cart. | FE1 | Component reusable | ✅ |
+| M1-FE-08 | **Cart State**: CartContext quản lý cart items. useCart hook với methods: addItem, removeItem, updateQuantity, clearCart, getTotal. Persist cart vào localStorage. | FE1 | Cart state hoạt động across pages | ✅ |
+| M1-FE-09 | **Cart Page**: Hiển thị cart items với quantity controls. Hiện subtotal, delivery fee, total. Form nhập delivery address. Nút "Place Order" disabled nếu cart empty. | FE1 | `/(customer)/cart` hoàn chỉnh | ✅ |
 | M1-FE-10 | **Checkout Flow**: Gọi `POST /orders` với cart items + address. Handle loading state. Clear cart on success. Redirect đến order detail page. Show error toast nếu fail. | FE1 | Đặt hàng thành công end-to-end | ⬜ |
 | M1-FE-11 | **Order Detail Page**: Fetch order by ID. Hiển thị status badge, items list, total, delivery address. Polling mỗi 10s để update status (hoặc prepare cho WebSocket). | FE2 | `/(customer)/orders/[orderId]` | ⬜ |
 | M1-FE-12 | **Order History**: Fetch danh sách orders của customer. Hiện list cards với status, date, total. Click vào navigate đến detail. Pagination hoặc infinite scroll. Empty state nếu chưa có order. | FE2 | `/(customer)/orders` với list | ⬜ |
@@ -489,7 +489,7 @@ flowchart TB
 
 1. **OpenStreetMap**: Sử dụng Leaflet.js cho map integration, không dùng Google Maps
 2. **Event-Driven**: Modules giao tiếp qua Domain Events, không trực tiếp access DB của module khác
-3. **BCE Pattern**: Cả Backend và Frontend đều follow Boundary/Control/Entity pattern
+3. **Frontend Architecture**: Feature-based pattern (`features/` with service + hook + UI per domain). `lib/` chỉ chứa shared infra (api.ts, constants.ts, utils.ts)
 4. **WebSocket**: Dùng Nest Gateway cho realtime, có fallback polling nếu WS fail
 5. **Cross-module Events**: 
    - BE1 (Ordering) subscribe events từ BE2 (Order-Processing, Delivery)
