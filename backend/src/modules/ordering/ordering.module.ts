@@ -1,13 +1,19 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Order, OrderSchema } from './infrastructure/persistence/order.schema';
-import { OrderMongoRepository } from './infrastructure/persistence/order.repo.mongo';
+import { Order, OrderSchema } from './order.schema';
+import { MenuItem, MenuItemSchema } from './menu-item.schema';
+import { OrderingService } from './ordering.service';
+import { MenuController, OrdersController } from './ordering.controller';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
+    MongooseModule.forFeature([
+      { name: Order.name, schema: OrderSchema },
+      { name: MenuItem.name, schema: MenuItemSchema },
+    ]),
   ],
-  providers: [OrderMongoRepository],
-  exports: [OrderMongoRepository],
+  controllers: [MenuController, OrdersController],
+  providers: [OrderingService],
+  exports: [OrderingService],
 })
 export class OrderingModule {}

@@ -20,70 +20,109 @@ npm run dev
 frontend/src/
 ├── app/                          # Next.js App Router (Pages)
 │   ├── layout.tsx                # Root layout
+│   ├── page.tsx                  # Landing page
+│   ├── page.module.scss          # Landing page styles
+│   ├── globals.scss              # Global styles
 │   ├── providers.tsx             # Context providers wrapper
-│   ├── login/page.tsx            # Login page
+│   ├── favicon.ico               # Favicon
+│   ├── login/                    # Login route
+│   │   └── page.tsx
 │   ├── (customer)/               # Customer route group
-│   │   ├── page.tsx              # Customer home
-│   │   ├── menu/page.tsx
-│   │   ├── cart/page.tsx
-│   │   └── orders/[id]/page.tsx
+│   │   ├── page.tsx              # Customer dashboard
+│   │   ├── menu/page.tsx         # Browse menu
+│   │   ├── cart/page.tsx         # Shopping cart
+│   │   └── orders/               # Order management
+│   │       ├── page.tsx          # Order list
+│   │       └── [id]/page.tsx     # Order detail
 │   ├── (staff)/                  # Staff route group
-│   │   └── orders/page.tsx
+│   │   └── tickets/page.tsx      # Kitchen ticket queue
 │   ├── (driver)/                 # Driver route group
-│   │   └── jobs/[orderId]/page.tsx
+│   │   └── jobs/                 # Delivery jobs
+│   │       ├── page.tsx          # Job list
+│   │       └── [orderId]/page.tsx # Job detail
 │   └── (admin)/                  # Admin route group
-│       ├── dashboard/page.tsx
-│       └── drivers/page.tsx
+│       ├── dashboard/page.tsx    # Admin dashboard
+│       └── drivers/page.tsx      # Driver management
 │
 ├── components/                   # Shared React components
-│   ├── ui/                       # UI components (Button, Input, etc.)
-│   ├── layout/                   # Layout components (Header, Sidebar, etc.)
-│   ├── cart/                     # Cart components
-│   ├── menu/                     # Menu components
+│   ├── ui/                       # UI primitives
+│   │   ├── Badge.tsx
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Dialog.tsx
+│   │   ├── Input.tsx
+│   │   ├── Label.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Spinner.tsx
+│   │   └── index.ts
+│   ├── layout/                   # Layout components
+│   │   ├── BottomNav.tsx
+│   │   ├── Header.tsx
+│   │   ├── PageContainer.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── index.ts
 │   └── shared/                   # Shared/common components
+│       └── PageHeader.tsx
 │
 ├── features/                     # Feature-Based Architecture
-│   ├── auth/                     # Auth feature
-│   │   ├── AuthContext.tsx       # React Context
-│   │   ├── auth.service.ts       # API calls
+│   ├── auth/                     # Authentication & Authorization
+│   │   ├── AuthContext.tsx       # Auth context provider
+│   │   ├── auth.service.ts       # Auth API calls
 │   │   ├── auth.storage.ts       # localStorage helpers
-│   │   ├── useAuth.ts            # Custom hook
-│   │   ├── LoginForm.tsx         # UI Component
-│   │   └── index.ts              # Public API exports
-│   ├── cart/
-│   │   ├── CartContext.tsx
-│   │   ├── CartList.tsx
+│   │   ├── useAuth.ts            # Auth hook
+│   │   ├── LoginForm.tsx         # Login UI
 │   │   └── index.ts
-│   ├── menu/
-│   │   ├── menu.service.ts
-│   │   ├── useMenu.ts
+│   ├── cart/                     # Shopping Cart
+│   │   ├── CartContext.tsx       # Cart context provider
+│   │   ├── CartList.tsx          # Cart items UI
+│   │   ├── CartSummary.tsx       # Cart summary UI
 │   │   └── index.ts
-│   ├── orders/
-│   │   ├── order.service.ts
-│   │   ├── useOrders.ts
+│   ├── menu/                     # Menu & MenuItem
+│   │   ├── menu.service.ts       # Menu API calls
+│   │   ├── useMenu.ts            # Menu hook
+│   │   ├── MenuItemCard.tsx      # Menu item card UI
+│   │   ├── MenuList.tsx          # Menu list UI
 │   │   └── index.ts
-│   ├── staff/
-│   │   ├── staff.service.ts
-│   │   ├── useStaffQueue.ts
+│   ├── orders/                   # Order Management (Customer)
+│   │   ├── order.service.ts      # Order API calls
+│   │   ├── useOrders.ts          # Orders hook
+│   │   ├── OrderDetail.tsx       # Order detail UI
+│   │   ├── OrderList.tsx         # Order list UI
+│   │   ├── OrderStatusBadge.tsx  # Order status badge
 │   │   └── index.ts
-│   ├── driver/
-│   │   ├── driver.service.ts
-│   │   ├── useDriverJobs.ts
+│   ├── staff/                    # Kitchen Staff (Ticket Queue)
+│   │   ├── staff.service.ts      # Staff API calls
+│   │   ├── ticket.service.ts     # Ticket API calls
+│   │   ├── useStaffQueue.ts      # Staff queue hook
+│   │   ├── useTickets.ts         # Tickets hook
+│   │   ├── TicketCard.tsx        # Ticket card UI
+│   │   ├── TicketQueue.tsx       # Ticket queue UI
 │   │   └── index.ts
-│   └── tracking/
-│       ├── tracking.service.ts
-│       ├── useTracking.ts
+│   ├── driver/                   # Driver (Delivery Jobs)
+│   │   ├── driver.service.ts     # Driver API calls
+│   │   ├── job.service.ts        # Job API calls
+│   │   ├── useDriverJobs.ts      # Driver jobs hook
+│   │   ├── useJobs.ts            # Jobs hook
+│   │   ├── JobCard.tsx           # Job card UI
+│   │   ├── JobList.tsx           # Job list UI
+│   │   └── index.ts
+│   ├── tracking/                 # Real-time Order Tracking
+│   │   ├── tracking.service.ts   # Tracking API calls
+│   │   ├── useTracking.ts        # Tracking hook
+│   │   ├── TrackingMap.tsx       # Map UI
+│   │   ├── DriverMarker.tsx      # Driver marker UI
+│   │   └── index.ts
+│   └── admin/                    # Admin Dashboard
+│       ├── admin.service.ts      # Admin API calls
+│       ├── useAdminStats.ts      # Admin stats hook
+│       ├── DriverTable.tsx       # Driver table UI
+│       ├── StatsCards.tsx        # Stats cards UI
 │       └── index.ts
 │
 ├── lib/                          # API Infrastructure & Utilities
-│   ├── api.ts                    # Base HTTP client (axios/fetch wrapper)
-│   ├── auth-storage.ts           # JWT storage helpers
-│   ├── auth.client.ts            # Auth HTTP client
-│   ├── menu.client.ts            # Menu HTTP client
-│   ├── order.client.ts           # Order HTTP client
-│   ├── socket.ts                 # WebSocket client (Socket.IO)
-│   ├── utils.ts                  # Utility functions
-│   └── constants.ts              # Constants
+│   ├── api.ts                    # Base HTTP client (fetch wrapper)
+│   ├── constants.ts              # App constants
+│   └── utils.ts                  # Utility functions
 │
 ├── types/                        # TypeScript type definitions
 │   ├── index.ts                  # Main exports
@@ -156,10 +195,10 @@ POST /auth/login
 3. Store token in localStorage (`auth.storage.ts`)
 4. Update `AuthContext` with user info
 5. Redirect based on user role:
-   - `customer` → /menu
-   - `staff`    → /staff/orders
-   - `driver`   → /driver/jobs
-   - `admin`    → /admin/dashboard
+   - `CUSTOMER` → /menu
+   - `STAFF`    → /staff/tickets
+   - `DRIVER`   → /driver/jobs
+   - `ADMIN`    → /admin/dashboard
 
 ## 🌐 API Infrastructure
 
@@ -176,7 +215,7 @@ export const api = {
 };
 ```
 
-### Auth Storage (`lib/auth-storage.ts`)
+### Auth Storage (`features/auth/auth.storage.ts`)
 
 ```typescript
 // JWT token management
@@ -190,7 +229,7 @@ export const authStorage = {
 
 ### Feature Services
 
-Each feature has its own service file:
+Each feature has its own service file for API communication:
 
 ```typescript
 // features/auth/auth.service.ts
@@ -204,14 +243,35 @@ export const authService = {
 };
 ```
 
+```typescript
+// features/menu/menu.service.ts
+import { api } from '@/lib/api';
+
+export const menuService = {
+  getMenuItems: () => api.get<MenuItem[]>('/menu'),
+  getMenuItem: (id: string) => api.get<MenuItem>(`/menu/${id}`),
+};
+```
+
+```typescript
+// features/orders/order.service.ts
+import { api } from '@/lib/api';
+
+export const orderService = {
+  createOrder: (data: CreateOrderRequest) => api.post<Order>('/orders', data),
+  getMyOrders: () => api.get<Order[]>('/orders/my'),
+  getOrderById: (id: string) => api.get<Order>(`/orders/${id}`),
+};
+```
+
 ## 🎯 Key Features
 
 ### Route Groups
 
-- `(customer)` - Customer pages with customer layout
-- `(staff)` - Staff pages with staff layout
-- `(driver)` - Driver pages with driver layout
-- `(admin)` - Admin pages with admin layout
+- `(customer)` - Customer pages (menu, cart, orders)
+- `(staff)` - Staff pages (kitchen ticket queue)
+- `(driver)` - Driver pages (delivery jobs)
+- `(admin)` - Admin pages (dashboard, driver management)
 
 ### Route Protection
 
@@ -231,4 +291,5 @@ export const authService = {
 - **React 19** - UI library
 - **TypeScript** - Type safety
 - **Sass** - CSS preprocessing
-- **Socket.IO** - Real-time communication (WebSocket)
+- **Tailwind CSS** - Utility-first CSS framework
+- **Socket.IO** - Real-time communication (planned)

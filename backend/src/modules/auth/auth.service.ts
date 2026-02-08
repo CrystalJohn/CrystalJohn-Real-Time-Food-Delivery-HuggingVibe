@@ -15,7 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<{ userId: string }> {
+  async register(registerDto: RegisterDto): Promise<{ token: string; user: any }> {
     const { email, password, role } = registerDto;
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) {
@@ -29,7 +29,21 @@ export class AuthService {
       role,
     });
     await newUser.save();
-    return { userId: newUser._id.toString() };
+
+    const payload: JwtPayload = {
+      sub: newUser._id.toString(),
+      email: newUser.email,
+      role: newUser.role,
+    };
+
+    return {
+      token: this.jwtService.sign(payload),
+      user: {
+        id: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    };
   }
 
   async login(loginDto: LoginDto) {
@@ -42,7 +56,7 @@ export class AuthService {
 
     const payload: JwtPayload = { sub: user._id.toString(), email: user.email, role: user.role };
     return {
-      access_token: this.jwtService.sign(payload),
+      token: this.jwtService.sign(payload),
       user: {
         id: user._id,
         email: user.email,
