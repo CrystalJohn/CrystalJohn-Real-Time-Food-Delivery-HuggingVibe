@@ -40,56 +40,80 @@ Request → Controller → Service → Schema (MongoDB)
 
 ```
 backend/src/
-├── main.ts                        # Application entry point
-├── app.module.ts                  # Root module
-├── seed.ts                        # Database seeding script
+├── app.module.ts                  # Root Module (Import các module con)
+├── main.ts                        # Entry point (Swagger, ValidationPipe)
 │
-├── infrastructure/                # Cross-cutting concerns
-│   ├── config/                    # Environment configuration
-│   │   ├── config.module.ts
+├── common/                        # 🛠️ CÁC TIỆN ÍCH DÙNG CHUNG
+│   ├── configs/                   # Cấu hình Env
 │   │   └── env.validation.ts
-│   └── mongo/                     # MongoDB connection
-│       └── mongo.module.ts
+│   ├── decorators/
+│   │   ├── current-user.decorator.ts # Lấy user từ Request
+│   │   └── roles.decorator.ts        # @Roles('ADMIN')
+│   ├── guards/
+│   │   ├── jwt-auth.guard.ts         # Check login
+│   │   └── roles.guard.ts            # Check quyền
+│   └── database/
+│       └── abstract.schema.ts        # Base schema (_id, timestamps)
 │
-├── modules/                       # Feature modules (flat structure)
-│   ├── auth/                      # Authentication & Authorization
+├── modules/                       # 📦 CÁC MODULE NGHIỆP VỤ
+│   │
+│   ├── auth/                      # 👤 QUẢN LÝ NGƯỜI DÙNG & PROFILE
+│   │   ├── dto/
+│   │   │   ├── login.dto.ts
+│   │   │   ├── register.dto.ts
+│   │   │   └── create-address.dto.ts
+│   │   ├── schemas/
+│   │   │   ├── user.schema.ts        # [Collection: users]
+│   │   │   ├── customer.schema.ts    # [Collection: customers]
+│   │   │   ├── staff.schema.ts       # [Collection: staffs]
+│   │   │   └── address.schema.ts     # [Collection: addresses]
 │   │   ├── auth.controller.ts
 │   │   ├── auth.service.ts
-│   │   ├── auth.module.ts
-│   │   ├── user.schema.ts
-│   │   ├── dto/                   # Request/Response DTOs
-│   │   ├── guards/                # JWT & Role guards
-│   │   ├── strategies/            # Passport strategies
-│   │   ├── decorators/            # Custom decorators
-│   │   └── interfaces/
+│   │   └── auth.module.ts
 │   │
-│   ├── ordering/                  # Customer Orders & Menu
-│   │   ├── ordering.controller.ts # MenuController + OrdersController
-│   │   ├── ordering.service.ts    # Order & Menu logic
-│   │   ├── ordering.module.ts
-│   │   ├── order.schema.ts        # Order model
-│   │   └── menu-item.schema.ts    # MenuItem model
+│   ├── ordering/                  # 🍔 QUẢN LÝ MENU & ĐẶT HÀNG (Core)
+│   │   ├── dto/
+│   │   │   ├── create-order.dto.ts
+│   │   │   ├── add-to-cart.dto.ts
+│   │   │   └── create-menu-item.dto.ts
+│   │   ├── schemas/
+│   │   │   ├── category.schema.ts    # [Collection: menu_categories]
+│   │   │   ├── menu-item.schema.ts   # [Collection: menu_items] (Chứa Images)
+│   │   │   ├── cart.schema.ts        # [Collection: carts] (Chứa Items)
+│   │   │   └── order.schema.ts       # [Collection: orders] (Chứa OrderItems + History)
+│   │   ├── ordering.controller.ts
+│   │   ├── ordering.service.ts
+│   │   └── ordering.module.ts
 │   │
-│   ├── order-processing/          # Kitchen Ticket Queue (Staff)
-│   │   ├── order-processing.controller.ts
-│   │   ├── order-processing.service.ts
-│   │   ├── order-processing.module.ts
-│   │   └── kitchen-ticket.schema.ts
-│   │
-│   ├── delivery/                  # Delivery Management (Driver)
-│   │   ├── delivery.controller.ts # 3 controllers (Delivery, Driver, AdminDriver)
+│   ├── delivery/                  # 🛵 QUẢN LÝ TÀI XẾ & GPS
+│   │   ├── dto/
+│   │   │   ├── update-location.dto.ts
+│   │   │   └── register-driver.dto.ts
+│   │   ├── schemas/
+│   │   │   ├── driver.schema.ts          # [Collection: drivers] (Thông tin xe, bằng lái)
+│   │   │   └── driver-location.schema.ts # [Collection: driver_locations] (Log GPS)
+│   │   ├── delivery.controller.ts
 │   │   ├── delivery.service.ts
-│   │   ├── delivery.module.ts
-│   │   ├── delivery-assignment.schema.ts
-│   │   └── driver.schema.ts
+│   │   └── delivery.module.ts
 │   │
-│   └── tracking/                  # Real-time Order Tracking (WebSocket)
-│       ├── tracking.gateway.ts    # Socket.IO gateway
-│       └── tracking.module.ts
+│   ├── order-processing/          # 🍳 BẾP & STAFF (Logic Only)
+│   │   ├── dto/
+│   │   │   └── update-status.dto.ts
+│   │   ├── order-processing.controller.ts
+│   │   ├── order-processing.service.ts   # (Gọi OrderModel từ OrderingModule)
+│   │   └── order-processing.module.ts    # (Imports: [OrderingModule])
+│   │
+│   └── events/                    # 📡 REAL-TIME SOCKET
+│       ├── gateways/
+│       │   └── tracking.gateway.ts       # Xử lý socket room "order_123"
+│       └── events.module.ts
 │
-└── shared/                        # Shared resources
-    └── enums/
-        └── user-role.enum.ts
+└── shared/                        # 🔗 CONSTANTS & ENUMS
+    ├── enums/
+    │   ├── user-role.enum.ts     # CUSTOMER, DRIVER, STAFF, ADMIN
+    │   └── order-status.enum.ts  # PENDING, CONFIRMED, PREPARING...
+    └── constants/
+        └── app.constant.ts
 ```
 
 ## 🔐 Authentication & Authorization
