@@ -7,7 +7,7 @@ export const authStorage = {
   },
 
   setToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(TOKEN_KEY, token); // sử dụng localStorage để lưu token
   },
 
   removeToken(): void {

@@ -3,7 +3,9 @@ import { authStorage } from '@/features/auth/auth.storage';
 
 // Base URL from environment variables (Next.js uses process.env)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
+if (typeof window !== 'undefined') {
+  console.log('🔍 API_BASE_URL:', API_BASE_URL);
+}
 // ============================================================================
 // Axios Instance
 // ============================================================================
@@ -29,6 +31,10 @@ axiosInstance.interceptors.request.use(
     return config;
   }, 
   (error: AxiosError) => {
+    // Nếu Backend trả về 401 (Unauthorized)
+    if (error.response && error.response.status === 401) {
+    authStorage.removeToken(); // xoá token trong localStorage  
+  }
     return Promise.reject(error);   // nếu req fail thì reject ko retry
   }
 );

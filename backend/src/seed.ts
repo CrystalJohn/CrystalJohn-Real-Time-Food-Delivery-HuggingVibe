@@ -21,10 +21,10 @@ async function bootstrap() {
     // Seed 4 test users
     const password = await bcrypt.hash('123456', 10);
     const users = [
-      { email: 'customer@test.com', passwordHash: password, role: UserRole.CUSTOMER },
-      { email: 'staff@test.com', passwordHash: password, role: UserRole.STAFF },
-      { email: 'driver@test.com', passwordHash: password, role: UserRole.DRIVER },
-      { email: 'admin@test.com', passwordHash: password, role: UserRole.ADMIN },
+      { email: 'customer@test.com', passwordHash: password, name: 'Customer User', role: UserRole.CUSTOMER },
+      { email: 'staff@test.com', passwordHash: password, name: 'Staff User', role: UserRole.STAFF },
+      { email: 'driver@test.com', passwordHash: password, name: 'Driver User', role: UserRole.DRIVER },
+      { email: 'admin@test.com', passwordHash: password, name: 'Admin User', role: UserRole.ADMIN },
     ];
 
     for (const user of users) {
@@ -33,7 +33,9 @@ async function bootstrap() {
         await userModel.create(user);
         console.log(`✅ Created user: ${user.email}`);
       } else {
-        console.log(`⏭️  User already exists: ${user.email}`);
+        // Update existing user to ensure name and password are correct
+        await userModel.updateOne({ email: user.email }, { $set: { name: user.name, role: user.role, passwordHash: user.passwordHash } });
+        console.log(`🔄 Updated user: ${user.email}`);
       }
     }
 

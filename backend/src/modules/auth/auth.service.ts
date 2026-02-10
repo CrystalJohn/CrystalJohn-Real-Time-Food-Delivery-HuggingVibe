@@ -16,7 +16,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<{ token: string; user: any }> {
-    const { email, password, role } = registerDto;
+    const { email, password, name, role } = registerDto;
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) {
       throw new ConflictException('Email already in use');
@@ -26,6 +26,7 @@ export class AuthService {
     const newUser = new this.userModel({
       email,
       passwordHash,
+      name,
       role,
     });
     await newUser.save();
@@ -41,6 +42,7 @@ export class AuthService {
       user: {
         id: newUser._id,
         email: newUser.email,
+        name: newUser.name,
         role: newUser.role,
       },
     };
@@ -60,6 +62,7 @@ export class AuthService {
       user: {
         id: user._id,
         email: user.email,
+        name: user.name,
         role: user.role,
       },
     };
