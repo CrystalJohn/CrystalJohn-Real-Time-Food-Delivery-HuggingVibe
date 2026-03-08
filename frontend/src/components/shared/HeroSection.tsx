@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { MOCK_HERO_SLIDES } from '@/mocks';
-import { HERO_SLIDE_COLORS } from '@/lib/constants';
 
 /**
  * HeroSection Component
@@ -48,19 +46,19 @@ export function HeroSection() {
           transition={{ duration: 0.5 }}
           className="absolute inset-0"
         >
-          {/* Background Gradient — colors defined in lib/constants.ts HERO_SLIDE_COLORS */}
-          <div className={`absolute inset-0 bg-gradient-to-r ${HERO_SLIDE_COLORS[currentSlide % HERO_SLIDE_COLORS.length]} opacity-90`} />
-
-          {/* Background Image */}
+          {/* Single full background image for each slide */}
           <div
-            className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-40"
+            className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${slides[currentSlide].imageUrl})` }}
           />
 
+          {/* Dark overlay to keep text readable */}
+          <div className="absolute inset-0 bg-black/45" />
+
           {/* Content Container */}
           <div className="absolute inset-0 container mx-auto px-4 lg:px-8 flex items-center">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center w-full">
-              {/* Text Content - Left Side */}
+            <div className="w-full max-w-2xl">
+              {/* Text Content */}
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -114,24 +112,6 @@ export function HeroSection() {
                     </a>
                   </Button>
                 </motion.div>
-              </motion.div>
-
-              {/* Image - Right Side (Hidden on mobile) */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                className="hidden lg:flex justify-center items-center z-10"
-              >
-                <div className="relative w-full h-96">
-                  <Image
-                    src={slides[currentSlide].imageUrl}
-                    alt={slides[currentSlide].title}
-                    fill
-                    className="object-contain drop-shadow-2xl"
-                    priority
-                  />
-                </div>
               </motion.div>
             </div>
           </div>
