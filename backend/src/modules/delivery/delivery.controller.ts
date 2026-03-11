@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Param, Body, Req } from '@nestjs/common';
 import { DeliveryService } from './delivery.service';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../shared/enums/user-role.enum';
 
 @Controller('delivery')

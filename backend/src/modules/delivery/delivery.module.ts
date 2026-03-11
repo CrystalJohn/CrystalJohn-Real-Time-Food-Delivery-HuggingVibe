@@ -11,16 +11,28 @@ import {
   DriverController,
   AdminDriverController,
 } from './delivery.controller';
+import { DeliveryAssignmentRepository } from './repositories/delivery-assignment.repository';
+import { DriverRepository } from './repositories/driver.repository';
+import { DeliveryStateGuard } from './state/delivery-state.guard';
+import { DriverStateGuard } from './state/driver-state.guard';
+import { MapModule } from '../../integrations/map/map.module';
 
 @Module({
   imports: [
+    MapModule,
     MongooseModule.forFeature([
       { name: DeliveryAssignment.name, schema: DeliveryAssignmentSchema },
       { name: Driver.name, schema: DriverSchema },
     ]),
   ],
   controllers: [DeliveryController, DriverController, AdminDriverController],
-  providers: [DeliveryService],
+  providers: [
+    DeliveryService,
+    DeliveryAssignmentRepository,
+    DriverRepository,
+    DeliveryStateGuard,
+    DriverStateGuard,
+  ],
   exports: [DeliveryService],
 })
 export class DeliveryModule {}

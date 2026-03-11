@@ -4,6 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { KitchenTicket, KitchenTicketSchema } from './kitchen-ticket.schema';
 import { OrderProcessingService } from './order-processing.service';
 import { OrderProcessingController } from './order-processing.controller';
+import { KitchenTicketRepository } from './repositories/kitchen-ticket.repository';
+import { TicketStateGuard } from './state/ticket-state.guard';
 
 @Module({
   imports: [
@@ -13,7 +15,11 @@ import { OrderProcessingController } from './order-processing.controller';
     ]),
   ],
   controllers: [OrderProcessingController],
-  providers: [OrderProcessingService],
+  providers: [
+    OrderProcessingService,
+    KitchenTicketRepository,
+    TicketStateGuard,
+  ],
   exports: [OrderProcessingService],
 })
 export class OrderProcessingModule {}

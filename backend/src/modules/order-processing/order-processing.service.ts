@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { Model } from 'mongoose';
-import { KitchenTicket, KitchenTicketDocument } from './kitchen-ticket.schema';
+import { KitchenTicket } from './kitchen-ticket.schema';
+import { KitchenTicketRepository } from './repositories/kitchen-ticket.repository';
+import { TicketStateGuard } from './state/ticket-state.guard';
 
 @Injectable()
 export class OrderProcessingService {
   constructor(
-    @InjectModel(KitchenTicket.name)
-    private ticketModel: Model<KitchenTicketDocument>,
+    private readonly kitchenTicketRepository: KitchenTicketRepository,
+    private readonly ticketStateGuard: TicketStateGuard,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -20,40 +20,43 @@ export class OrderProcessingService {
     items: any[];
     deliveryAddress: string;
   }): Promise<void> {
-    const ticket = await this.ticketModel.create({
-      orderId: payload.orderId,
-      items: payload.items.map((item) => ({
+    const ticket = await this.kitchenTicketRepository.create(
+      payload.orderId,
+      payload.items.map((item) => ({
         menuItemId: item.menuItemId,
         name: item.name,
         quantity: item.quantity,
       })),
-      status: 'PENDING',
-    });
+    );
 
     console.log(`[OrderProcessing] Created ticket ${ticket._id} for order ${payload.orderId}`);
   }
 
   // TODO M2-BE-02: Implement ticket endpoints logic
   async findAll(status?: string): Promise<KitchenTicket[]> {
-    const filter: any = {};
-    if (status) {
-      filter.status = status;
-    }
-    return this.ticketModel.find(filter).sort({ createdAt: -1 }).exec();
+    return this.kitchenTicketRepository.findAll(status);
   }
 
   async findById(id: string): Promise<KitchenTicket | null> {
-    return this.ticketModel.findById(id).exec();
+    return this.kitchenTicketRepository.findById(id);
   }
 
   async acceptTicket(id: string, staffId: string): Promise<KitchenTicket> {
-    const ticket = await this.ticketModel
-      .findByIdAndUpdate(
-        id,
-        { status: 'IN_PROGRESS', staffId, acceptedAt: new Date() },
-        { new: true },
-      )
-      .exec();
+    const currentTicket = await this.kitchenTicketRepository.findById(id);
+    if (!currentTicket) {
+      throw new NotFoundException(`Kitchen ticket ${id} not found`);
+    }
+
+    this.ticketStateGuard.assertTransition(currentTicket.status, 'IN_PROGRESS');
+
+    const ticket = await this.kitchenTicketRepository.updateById(id, {
+      status: 'IN_PROGRESS',
+      staffId,
+      acceptedAt: new Date(),
+    });
+    if (!ticket) {
+      throw new NotFoundException(`Kitchen ticket ${id} not found`);
+    }
 
     // Emit event for Ordering module
     this.eventEmitter.emit('ticket.confirmed', { orderId: ticket.orderId });
@@ -66,13 +69,21 @@ export class OrderProcessingService {
     staffId: string,
     reason: string,
   ): Promise<KitchenTicket> {
-    const ticket = await this.ticketModel
-      .findByIdAndUpdate(
-        id,
-        { status: 'REJECTED', staffId, rejectionReason: reason },
-        { new: true },
-      )
-      .exec();
+    const currentTicket = await this.kitchenTicketRepository.findById(id);
+    if (!currentTicket) {
+      throw new NotFoundException(`Kitchen ticket ${id} not found`);
+    }
+
+    this.ticketStateGuard.assertTransition(currentTicket.status, 'REJECTED');
+
+    const ticket = await this.kitchenTicketRepository.updateById(id, {
+      status: 'REJECTED',
+      staffId,
+      rejectionReason: reason,
+    });
+    if (!ticket) {
+      throw new NotFoundException(`Kitchen ticket ${id} not found`);
+    }
 
     // Emit event for Ordering module
     this.eventEmitter.emit('ticket.rejected', { orderId: ticket.orderId });
@@ -81,13 +92,20 @@ export class OrderProcessingService {
   }
 
   async markReady(id: string): Promise<KitchenTicket> {
-    const ticket = await this.ticketModel
-      .findByIdAndUpdate(
-        id,
-        { status: 'READY', readyAt: new Date() },
-        { new: true },
-      )
-      .exec();
+    const currentTicket = await this.kitchenTicketRepository.findById(id);
+    if (!currentTicket) {
+      throw new NotFoundException(`Kitchen ticket ${id} not found`);
+    }
+
+    this.ticketStateGuard.assertTransition(currentTicket.status, 'READY');
+
+    const ticket = await this.kitchenTicketRepository.updateById(id, {
+      status: 'READY',
+      readyAt: new Date(),
+    });
+    if (!ticket) {
+      throw new NotFoundException(`Kitchen ticket ${id} not found`);
+    }
 
     // Emit events for Ordering + Delivery modules
     this.eventEmitter.emit('ticket.ready', { orderId: ticket.orderId });

@@ -9,10 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { OrderingService } from './ordering.service';
-import { Public } from '../auth/decorators/public.decorator';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../shared/enums/user-role.enum';
 import { OrderItem } from './order.schema';
+import { PaymentMethod } from '../../integrations/payment/interfaces/payment-gateway.interface';
 
 @Controller('menu')
 export class MenuController {
@@ -37,6 +38,7 @@ export class OrdersController {
     body: {
       items: OrderItem[];
       deliveryAddress: string;
+      paymentMethod?: PaymentMethod;
     },
   ) {
     const customerId = req.user.userId;
@@ -44,6 +46,7 @@ export class OrdersController {
       customerId,
       body.items,
       body.deliveryAddress,
+      body.paymentMethod,
     );
   }
 

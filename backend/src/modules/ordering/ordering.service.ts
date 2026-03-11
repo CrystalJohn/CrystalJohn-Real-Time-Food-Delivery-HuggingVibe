@@ -1,16 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { Model } from 'mongoose';
-import { Order, OrderDocument, OrderItem } from './order.schema';
-import { MenuItem, MenuItemDocument } from './menu-item.schema';
+import { Order, OrderItem } from './order.schema';
+import { MenuItem } from './menu-item.schema';
+import { MenuItemRepository } from './repositories/menu-item.repository';
+import { OrderRepository } from './repositories/order.repository';
+import { OrderStateGuard } from './state/order-state.guard';
+import {
+  PAYMENT_GATEWAY,
+  PaymentGateway,
+  PaymentMethod,
+} from '../../integrations/payment/interfaces/payment-gateway.interface';
 
 @Injectable()
 export class OrderingService {
   constructor(
-    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
-    @InjectModel(MenuItem.name)
-    private menuItemModel: Model<MenuItemDocument>,
+    private readonly orderRepository: OrderRepository,
+    private readonly menuItemRepository: MenuItemRepository,
+    private readonly orderStateGuard: OrderStateGuard,
+    @Inject(PAYMENT_GATEWAY)
+    private readonly paymentGateway: PaymentGateway,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -19,19 +32,34 @@ export class OrderingService {
     customerId: string,
     items: OrderItem[],
     deliveryAddress: string,
+    paymentMethod: PaymentMethod = 'COD',
   ): Promise<Order> {
     const totalAmount = items.reduce(
       (sum, item) => sum + item.quantity * item.unitPrice,
       0,
     );
 
-    const order = await this.orderModel.create({
+    const order = await this.orderRepository.create(
       customerId,
       items,
-      totalAmount,
       deliveryAddress,
-      status: 'PENDING',
-    });
+      totalAmount,
+    );
+
+    if (paymentMethod === 'ONLINE') {
+      const paymentResult = await this.paymentGateway.charge({
+        orderId: order._id.toString(),
+        amount: totalAmount,
+        method: paymentMethod,
+      });
+
+      if (!paymentResult.success) {
+        await this.updateOrderStatus(order._id.toString(), 'CANCELLED');
+        throw new InternalServerErrorException(
+          paymentResult.errorMessage || 'Payment processing failed',
+        );
+      }
+    }
 
     // Emit event for Order-Processing module
     this.eventEmitter.emit('order.placed', {
@@ -45,30 +73,36 @@ export class OrderingService {
   }
 
   async findOrdersByCustomer(customerId: string): Promise<Order[]> {
-    return this.orderModel.find({ customerId }).sort({ createdAt: -1 }).exec();
+    return this.orderRepository.findByCustomer(customerId);
   }
 
   async findOrderById(id: string): Promise<Order | null> {
-    return this.orderModel.findById(id).exec();
+    return this.orderRepository.findById(id);
   }
 
   async updateOrderStatus(orderId: string, status: string): Promise<Order> {
-    return this.orderModel
-      .findByIdAndUpdate(orderId, { status }, { new: true })
-      .exec();
+    const currentOrder = await this.orderRepository.findById(orderId);
+    if (!currentOrder) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    this.orderStateGuard.assertTransition(currentOrder.status, status);
+
+    const updated = await this.orderRepository.updateStatus(orderId, status);
+    if (!updated) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    return updated;
   }
 
   // Menu operations
   async findAllMenuItems(category?: string): Promise<MenuItem[]> {
-    const filter: any = { available: true };
-    if (category) {
-      filter.category = category;
-    }
-    return this.menuItemModel.find(filter).exec();
+    return this.menuItemRepository.findAvailable(category);
   }
 
   async findMenuItemById(id: string): Promise<MenuItem | null> {
-    return this.menuItemModel.findById(id).exec();
+    return this.menuItemRepository.findById(id);
   }
 
   // Event handlers for cross-module communication
