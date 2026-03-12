@@ -1,4 +1,4 @@
-export { Header } from './Header';
-export { BottomNav } from './BottomNav';
-export { Sidebar } from './Sidebar';
+export { CustomerHeader } from './CustomerHeader';
+export { LandingHeader } from './LandingHeader';
+export { LandingFooter } from './LandingFooter';
 export { PageContainer } from './PageContainer';

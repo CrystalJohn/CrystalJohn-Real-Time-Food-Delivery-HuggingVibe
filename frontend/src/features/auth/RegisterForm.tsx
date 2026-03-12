@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './useAuth';
 import { ROUTES } from '@/lib/constants';
+import { ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -18,7 +19,6 @@ export function RegisterForm() {
     password: '',
     confirmPassword: '',
     phone: '',
-    role: 'CUSTOMER' as 'CUSTOMER' | 'DRIVER',
     agreeTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -45,10 +45,10 @@ export function RegisterForm() {
     }
   }, [user, loading, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    
+    const checked = e.target.checked;
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -81,7 +81,7 @@ export function RegisterForm() {
       return false;
     }
 
-    // Phone validation (if provided)
+    // Phone validation
     if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) {
       setError('Phone number must be 10-11 digits');
       return false;
@@ -111,13 +111,16 @@ export function RegisterForm() {
         name: formData.name.trim(),
         email: formData.email.trim(),
         password: formData.password,
-        role: formData.role,
+        phone: formData.phone.trim() || undefined,
       });
-      // Redirect sẽ được handle bởi useEffect ở trên
+      // Redirect is handled by useEffect above
     } catch (err) {
-      const message =
-        (err as any)?.response?.data?.message ||
-        (err instanceof Error ? err.message : 'Registration failed. Please try again.');
+      let message = 'Registration failed. Please try again.';
+      if (err instanceof ApiError) {
+        message = err.message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
       setError(message);
       setLoading(false);
     }
@@ -155,9 +158,9 @@ export function RegisterForm() {
         />
       </div>
 
-      {/* Phone (Optional) */}
+      {/* Phone */}
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number (Optional)</Label>
+        <Label htmlFor="phone">Phone Number</Label>
         <Input
           id="phone"
           name="phone"
@@ -223,21 +226,6 @@ export function RegisterForm() {
             )}
           </button>
         </div>
-      </div>
-
-      {/* Role Selection */}
-      <div className="space-y-2">
-        <Label htmlFor="role">Register As</Label>
-        <select
-          id="role"
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          className="w-full h-11 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent bg-white"
-        >
-          <option value="CUSTOMER">Customer - Order food</option>
-          <option value="DRIVER">Driver - Deliver orders</option>
-        </select>
       </div>
 
       {/* Terms and Conditions */}

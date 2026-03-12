@@ -1,3 +1,4 @@
+// hook truy cập context
 'use client';
 
 import { useContext } from 'react';

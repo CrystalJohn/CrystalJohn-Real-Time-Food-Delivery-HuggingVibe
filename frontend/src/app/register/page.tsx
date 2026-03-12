@@ -14,10 +14,10 @@ export default function RegisterPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !authLoading) {
-      if (user.role === 'CUSTOMER') router.push('/(customer)/menu');
-      else if (user.role === 'STAFF') router.push('/(staff)/tickets');
-      else if (user.role === 'DRIVER') router.push('/(driver)/jobs');
-      else if (user.role === 'ADMIN') router.push('/(admin)/dashboard');
+      if (user.role === 'CUSTOMER') router.push('/menu');
+      else if (user.role === 'STAFF') router.push('/staff/tickets');
+      else if (user.role === 'DRIVER') router.push('/driver/jobs');
+      else if (user.role === 'ADMIN') router.push('/admin/dashboard');
     }
   }, [user, authLoading, router]);
 

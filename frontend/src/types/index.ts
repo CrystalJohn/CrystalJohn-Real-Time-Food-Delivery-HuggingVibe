@@ -3,7 +3,7 @@ export type { User, AuthToken } from './user';
 
 // Menu types
 export interface MenuItem {
-  id: string;
+  id: string | number;
   name: string;
   description?: string;
   price: number;

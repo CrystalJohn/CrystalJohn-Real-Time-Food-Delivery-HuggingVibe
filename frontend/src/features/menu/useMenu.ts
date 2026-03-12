@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { MenuItem } from '@/types';
 import { menuService } from './menu.service';
 
+// Class này quản lí fetch/loading/error. Dùng kiểu reuseable
 export function useMenu(category?: string) {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +27,7 @@ export function useMenu(category?: string) {
     };
 
     loadMenu();
-  }, [category]);
+  }, [category]); // chạy lại useEffect mỗi khi category thay đổi
 
   return { items, loading, error };
 }

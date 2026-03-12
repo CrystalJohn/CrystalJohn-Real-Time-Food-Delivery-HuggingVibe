@@ -9,7 +9,7 @@ import { ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { Eye, EyeOff, Facebook } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,10 +23,7 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !authLoading) {
-      if (user.role === 'CUSTOMER') router.push('/menu');
-      else if (user.role === 'STAFF') router.push('/(staff)/tickets');
-      else if (user.role === 'DRIVER') router.push('/(driver)/jobs');
-      else if (user.role === 'ADMIN') router.push('/(admin)/dashboard');
+      router.push('/');
     }
   }, [user, authLoading, router]);
 
@@ -157,5 +154,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
 
 

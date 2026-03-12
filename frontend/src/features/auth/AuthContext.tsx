@@ -1,3 +1,4 @@
+// state + login/register/logout logic, exposed through context
 'use client';
 
 import { createContext, useState, useEffect, type ReactNode } from 'react';
@@ -55,7 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     authStorage.removeToken();
     setUser(null);
-    authService.logout().catch(() => {});
   };
 
   return (

@@ -29,8 +29,13 @@ interface ProductCardProps {
   index?: number;
 }
 
+const currencyFormatter = new Intl.NumberFormat('vi-VN');
+
+function formatVnd(amount: number) {
+  return `${currencyFormatter.format(amount)}đ`;
+}
+
 export function ProductCard({ product, onAddToCart, index = 0 }: ProductCardProps) {
-  // Badge variant mapping
   const badgeVariant = {
     NEW: { className: 'bg-yellow-500 text-white', label: 'NEW' },
     HOT: { className: 'bg-red-600 text-white', label: 'HOT' },
@@ -50,7 +55,6 @@ export function ProductCard({ product, onAddToCart, index = 0 }: ProductCardProp
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300"
     >
-      {/* Badge */}
       {product.badge && (
         <motion.div
           initial={{ scale: 0, rotate: -45 }}
@@ -64,7 +68,6 @@ export function ProductCard({ product, onAddToCart, index = 0 }: ProductCardProp
         </motion.div>
       )}
 
-      {/* Product Image Container */}
       <div className="relative w-full h-48 lg:h-56 overflow-hidden bg-gray-100">
         <Image
           src={product.image}
@@ -72,35 +75,28 @@ export function ProductCard({ product, onAddToCart, index = 0 }: ProductCardProp
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        
-        {/* Overlay on hover */}
+
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
       </div>
 
-      {/* Product Info */}
       <div className="p-4 space-y-3">
-        {/* Product Name */}
         <h3 className="font-semibold text-gray-900 text-base line-clamp-2 min-h-[3rem] group-hover:text-red-600 transition-colors">
           {product.name}
         </h3>
 
-        {/* Price Section */}
         <div className="flex items-center justify-between mt-2">
           <div className="flex flex-col">
-            <span className="text-red-600 font-bold text-lg">
-              {product.price.toLocaleString()}đ
-            </span>
+            <span className="text-red-600 font-bold text-lg">{formatVnd(product.price)}</span>
             {product.originalPrice ? (
               <span className="text-gray-400 text-xs line-through">
-                {product.originalPrice.toLocaleString()}đ
+                {formatVnd(product.originalPrice)}
               </span>
             ) : (
               <span className="h-4"></span>
             )}
           </div>
 
-          {/* Small Add Button */}
-          <motion.button 
+          <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleAddToCart}
             className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors"
@@ -109,19 +105,17 @@ export function ProductCard({ product, onAddToCart, index = 0 }: ProductCardProp
           </motion.button>
         </div>
 
-        {/* Full Add to Cart Button */}
         <div className="pt-2">
           <Button
             variant="outline"
             onClick={handleAddToCart}
             className="w-full rounded-full border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors py-2 h-auto text-sm font-semibold"
           >
-            Thêm vào giỏ
+            Them vao gio
           </Button>
         </div>
       </div>
 
-      {/* Subtle bottom border effect on hover */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-orange-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
     </motion.div>
   );

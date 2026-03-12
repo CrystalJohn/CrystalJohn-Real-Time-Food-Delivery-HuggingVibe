@@ -1,21 +1,36 @@
-'use client';
+import { Suspense } from 'react';
+import { MenuHero } from '@/features/menu/components/MenuHero';
+import { SidebarFilter } from '@/features/menu/components/SidebarFilter';
+import { MenuGrid } from '@/features/menu/components/MenuGrid';
+import { MenuSkeleton } from '@/features/menu/components/MenuSkeleton';
+import { LandingFooter } from '@/components/layout/LandingFooter';
 
-import { MenuList } from '@/features/menu';
-import { useCart } from '@/features/cart';
-import type { MenuItem } from '@/types';
+type SearchParams = { [key: string]: string | string[] | undefined };
 
-export default function MenuPage() {
-  const { addItem } = useCart(); // Lấy hàm addItem từ CartContext để thêm món vào giỏ hàng
-
-  const handleAddToCart = (item: MenuItem) => {
-    addItem(item);
-  };
+export default async function MenuPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const resolvedParams = await searchParams;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Our Menu</h1>
-      <MenuList onAddToCart={handleAddToCart} />
+    <div className="min-h-screen bg-white flex flex-col">
+      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-6 flex-1">
+        <MenuHero />
+
+        <div className="flex flex-col md:flex-row gap-8 mt-8">
+          <SidebarFilter />
+
+          <div className="flex-1 min-w-0">
+            <Suspense fallback={<MenuSkeleton />} key={JSON.stringify(resolvedParams)}>
+              <MenuGrid searchParams={resolvedParams} />
+            </Suspense>
+          </div>
+        </div>
+      </div>
+
+      <LandingFooter />
     </div>
   );
 }
-
