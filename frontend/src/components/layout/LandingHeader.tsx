@@ -27,7 +27,7 @@ export function LandingHeader() {
     { href: '/promotions', label: 'Promotions' },
     { href: '/menu', label: 'Menu' },
     { href: '/store-locator', label: 'Store Locator' },
-    { href: '/about', label: 'About Us' },
+    { href: '/tracking-order', label: 'Tracking Order' },
   ];
 
   const sidebarItems = items.map((item) => ({
@@ -149,7 +149,7 @@ export function LandingHeader() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
                   >
                     <option value="EN">English</option>
-                    <option value="VN">Ti?ng Vi?t</option>
+                    <option value="VN">Tiếng Việt</option>
                   </select>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { MenuSearchBar } from '@/features/menu/components/MenuSearchBar';
 import { MenuHero } from '@/features/menu/components/MenuHero';
 import { SidebarFilter } from '@/features/menu/components/SidebarFilter';
 import { MenuGrid } from '@/features/menu/components/MenuGrid';
@@ -17,6 +18,7 @@ export default async function MenuPage({
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-6 flex-1">
+        <MenuSearchBar />
         <MenuHero />
 
         <div className="flex flex-col md:flex-row gap-8 mt-8">

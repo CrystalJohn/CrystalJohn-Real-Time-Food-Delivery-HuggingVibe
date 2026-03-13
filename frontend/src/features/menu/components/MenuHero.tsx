@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/Button';
 
 export function MenuHero() {
   return (
-    <div className="relative w-full h-[300px] md:h-[400px] bg-gray-900 rounded-3xl overflow-hidden mb-8 mt-4">
+    <div className="relative w-full h-[300px] md:h-[400px] bg-gray-900 rounded-3xl overflow-hidden mb-8 mt-0">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
         style={{ backgroundImage: 'url("/Image-menu.png")' }}

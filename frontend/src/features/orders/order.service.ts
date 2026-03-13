@@ -16,7 +16,7 @@ export const orderService = {
   },
 
   async getMyOrders(): Promise<Order[]> {
-    return api.get<Order[]>('/orders/my');
+    return api.get<Order[]>('/orders');
   },
 
   async cancelOrder(id: string): Promise<Order> {

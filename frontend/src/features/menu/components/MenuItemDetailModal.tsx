@@ -5,9 +5,10 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { menuService } from '@/features/menu/menu.service';
 import type { MenuItem } from '@/types/menu';
-import { AddToCartButton } from './AddToCartButton';
 import { Spinner } from '@/components/ui/Spinner';
 import type { Product } from './ProductCard';
+import { useCart } from '@/features/cart';
+import { Minus, Plus, X } from 'lucide-react';
 
 interface MenuItemDetailModalProps {
   isOpen: boolean;
@@ -19,13 +20,23 @@ interface MenuItemDetailModalProps {
 const vndFormatter = new Intl.NumberFormat('vi-VN');
 
 function formatVnd(price: number) {
-  return `${vndFormatter.format(price)} VNĐ`;
+  return `${vndFormatter.format(price)} đ`;
 }
 
 export function MenuItemDetailModal({ isOpen, onClose, itemId, initialProduct }: MenuItemDetailModalProps) {
   const [data, setData] = useState<MenuItem | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Cart state
+  const { addItem } = useCart();
+  const [quantity, setQuantity] = useState<number>(1);
+  const [isAdding, setIsAdding] = useState<boolean>(false);
+
+  // Reset quantity when opened
+  useEffect(() => {
+    if (isOpen) setQuantity(1);
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -64,7 +75,40 @@ export function MenuItemDetailModal({ isOpen, onClose, itemId, initialProduct }:
     fetchDetail();
   }, [isOpen, itemId, data]);
 
-  // Merge loaded data with initialProduct so we show something immediately
+  const handleDecrease = () => {
+    if (quantity > 1) setQuantity((prev) => prev - 1);
+  };
+
+  const handleIncrease = () => {
+    setQuantity((prev) => prev + 1);
+  };
+
+  const handleAddToCart = async () => {
+    // Determine the product info we have
+    const addData: MenuItem = {
+      id: data?.id || itemId,
+      name: data?.name || initialProduct.name,
+      price: data?.price ?? initialProduct.price,
+      description: data?.description || initialProduct.description,
+      imageUrl: data?.imageUrl || initialProduct.image,
+      category: data?.category || '',
+      available: data ? data.available : true,
+    };
+
+    if (!addData.available) return;
+
+    setIsAdding(true);
+    try {
+      await addItem(addData, quantity);
+      onClose(); // Optional: close modal on success
+    } catch (err) {
+      console.error('Failed to add to cart', err);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  // Merge loaded data with initialProduct
   const displayData = {
     name: data?.name || initialProduct.name,
     description: data?.description || initialProduct.description,
@@ -74,10 +118,12 @@ export function MenuItemDetailModal({ isOpen, onClose, itemId, initialProduct }:
     available: data ? data.available : true,
   };
 
+  const totalPrice = displayData.price * quantity;
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-6 pointer-events-none">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -87,112 +133,152 @@ export function MenuItemDetailModal({ isOpen, onClose, itemId, initialProduct }:
             onClick={onClose}
           />
 
-          {/* Modal Content - Shared Layout Transition */}
+          {/* Modal Content - Expanded to look like Popeyes Desktop Model */}
           <motion.div
             layoutId={`product-card-${itemId}`}
-            className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6 z-10 overflow-hidden flex flex-col pointer-events-auto"
+            className="relative bg-white shadow-2xl w-full h-full md:h-auto md:max-w-[4xl] lg:max-w-5xl md:rounded-xl overflow-hidden flex flex-col md:flex-row pointer-events-auto md:min-h-[550px] md:max-h-[85vh] z-10"
           >
-            {/* Display subtle loading spinner un-intrusively instead of wiping UI */}
-            {loading && !error && (
-              <div className="absolute top-4 right-14 z-20">
-                <div className="scale-75"><Spinner /></div>
-              </div>
-            )}
-
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Image */}
-              <motion.div
-                layoutId={`product-image-${itemId}`}
-                className="relative w-full md:w-1/2 aspect-square md:aspect-auto md:min-h-[300px] bg-gray-100 rounded-2xl overflow-hidden shrink-0"
-              >
-                <Image
-                  src={displayData.imageUrl}
-                  alt={displayData.name}
-                  fill
-                  className="object-cover"
-                />
-                {!displayData.available && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="bg-red-600 text-white text-sm font-black uppercase tracking-wider px-4 py-2 rounded-full shadow-lg">
-                      Hết hàng
-                    </span>
-                  </div>
-                )}
-              </motion.div>
-
-              {/* Details */}
-              <div className="flex flex-col flex-1 pb-2 mt-4 md:mt-0">
-                <motion.h2
-                  layoutId={`product-title-${itemId}`}
-                  className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-2 pr-8"
-                >
-                  {displayData.name}
-                </motion.h2>
-
-                {displayData.category && (
-                  <div className="mb-4">
-                    <span className="inline-block bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
-                      {displayData.category}
-                    </span>
-                  </div>
-                )}
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                  className="text-gray-600 leading-relaxed mb-6 flex-1"
-                >
-                  {error ? (
-                    <p className="text-red-500 font-medium">{error}</p>
-                  ) : (
-                    <p>{displayData.description || 'Đang tải mô tả ...'}</p>
-                  )}
-                </motion.div>
-
-                <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                  <motion.div
-                    layoutId={`product-price-${itemId}`}
-                    className="flex flex-col"
-                  >
-                    <span className="text-sm text-gray-400 font-semibold mb-0.5">Giá</span>
-                    <span className="text-2xl font-black text-red-600">
-                      {formatVnd(displayData.price)}
-                    </span>
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                    className="scale-110 origin-right transition-transform"
-                  >
-                    {displayData.available ? (
-                      <AddToCartButton
-                        productId={itemId}
-                        name={displayData.name}
-                        price={displayData.price}
-                      />
-                    ) : (
-                      <button disabled className="px-4 py-2 bg-gray-200 text-gray-400 font-bold rounded-xl cursor-not-allowed">
-                        Hết hàng
-                      </button>
-                    )}
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-
             {/* Absolute Close Button */}
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
               onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors z-20"
+              className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center bg-gray-100/80 hover:bg-gray-200 text-gray-700 rounded-full transition-colors z-20"
             >
-              ✕
+              <X className="w-5 h-5" />
             </motion.button>
+
+            {/* Left side: Large Image */}
+            <motion.div
+              layoutId={`product-image-${itemId}`}
+              className="relative w-full h-[40vh] md:h-auto md:w-[50%] lg:w-[55%] bg-gray-50 flex-shrink-0"
+            >
+              <Image
+                src={displayData.imageUrl}
+                alt={displayData.name}
+                fill
+                className="object-cover"
+                priority
+              />
+              {!displayData.available && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <span className="bg-red-600 text-white text-sm font-black uppercase tracking-wider px-4 py-2 rounded-full shadow-lg">
+                    Hết hàng
+                  </span>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Right side: Details and Actions */}
+            <div className="flex flex-col flex-1 w-full md:w-[50%] lg:w-[45%] bg-white h-full overflow-hidden">
+              
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 md:py-8 lg:px-8">
+                
+                {/* Title */}
+                <motion.h2
+                  layoutId={`product-title-${itemId}`}
+                  className="text-2xl md:text-3xl font-extrabold text-orange-600 leading-tight mb-2 pr-6"
+                >
+                  {displayData.name}
+                </motion.h2>
+
+                {/* Sub title / description */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="mt-3"
+                >
+                  {error ? (
+                    <p className="text-red-500 font-medium">{error}</p>
+                  ) : (
+                    <p className="text-gray-600 leading-relaxed">
+                      {displayData.description || 'Đang tải mô tả ...'}
+                    </p>
+                  )}
+                  {loading && !error && (
+                    <div className="mt-4 flex items-center text-sm text-gray-400 gap-2">
+                       <Spinner /> <span className="scale-90">Đang cập nhật...</span>
+                    </div>
+                  )}
+                </motion.div>
+                
+                {/* Visual Separator */}
+                <div className="my-6 border-t border-gray-100" />
+                
+                {/* Price Display */}
+                <motion.div
+                  layoutId={`product-price-${itemId}`}
+                  className="mb-8"
+                >
+                  <span className="text-3xl font-black text-gray-900">
+                    {formatVnd(displayData.price)}
+                  </span>
+                </motion.div>
+
+                {/* Optional Mock Options (Visual only as per backend data) */}
+                 <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                 >
+                   <div className="bg-orange-50/50 rounded-lg p-4 border border-orange-100">
+                      <p className="font-semibold text-gray-800 mb-2">Lưu ý</p>
+                      <p className="text-sm text-gray-600 italic"> Sản phẩm sẽ được chế biến tùy theo định lượng tiêu chuẩn của nhà hàng. Vui lòng thêm vào giỏ hàng để tiếp tục.</p>
+                   </div>
+                 </motion.div>
+
+              </div>
+
+              {/* Bottom Sticky Footer */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="p-4 md:p-6 bg-white border-t border-gray-100 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]"
+              >
+                <div className="flex items-center gap-4">
+                  {/* Quantity Control */}
+                  <div className="flex items-center h-12 bg-gray-50 border border-gray-200 rounded-full select-none overflow-hidden">
+                    <button
+                      onClick={handleDecrease}
+                      disabled={!displayData.available || quantity <= 1}
+                      className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-gray-800">
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={handleIncrease}
+                      disabled={!displayData.available}
+                      className="w-12 h-full flex items-center justify-center text-gray-600 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Add to Cart Button */}
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={!displayData.available || isAdding}
+                    className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-full disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-md active:scale-[0.98] flex items-center justify-center"
+                  >
+                    {isAdding ? (
+                      <Spinner />
+                    ) : !displayData.available ? (
+                      'Hết hàng'
+                    ) : (
+                      `Thêm - ${formatVnd(totalPrice)}`
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+
+            </div>
           </motion.div>
         </div>
       )}

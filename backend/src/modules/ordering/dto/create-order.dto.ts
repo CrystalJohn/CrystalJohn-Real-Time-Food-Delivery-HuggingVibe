@@ -1,1 +1,0 @@
-// Mục đích: Đảm bảo Frontend không gửi rác lên server.

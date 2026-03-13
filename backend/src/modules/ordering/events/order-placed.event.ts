@@ -1,1 +1,0 @@
-// Mục đích: Định nghĩa gói tin để bắn sang module Kitchen.

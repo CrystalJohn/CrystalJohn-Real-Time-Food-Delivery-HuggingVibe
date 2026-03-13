@@ -19,7 +19,7 @@ export const ROUTES = {
 export const NAV_LINKS = [
   { href: '/promotions', label: 'Promotions' },
   { href: '/menu', label: 'Menu' },
-  { href: '/about', label: 'About Us' },
+  { href: '/tracking-order', label: 'Tracking Order' },
 ] as const;
 
 /** Footer — menu category links */
