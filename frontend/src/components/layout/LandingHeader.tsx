@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import { Menu, X, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import { CartSidebar } from '@/components/shared/CartSidebar';
 import { ProfileMenu } from '@/components/shared/ProfileMenu';
 import { useAuth } from '@/features/auth';
 import { useCart } from '@/features/cart';
+import { orderService, type PaymentMethod } from '@/features/orders';
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=2600';
@@ -18,10 +20,11 @@ export function LandingHeader() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [language, setLanguage] = useState<'EN' | 'VN'>('VN');
 
   const { user, isAuthenticated, logout } = useAuth();
-  const { items, itemCount, updateQuantity, removeItem } = useCart();
+  const { items, itemCount, updateQuantity, removeItem, refreshCart } = useCart();
 
   const navLinks = [
     { href: '/promotions', label: 'Promotions' },
@@ -41,6 +44,29 @@ export function LandingHeader() {
   const handleLogout = () => {
     logout();
     router.push('/');
+  };
+
+  const handleCheckout = async (paymentMethod: PaymentMethod) => {
+    if (isCheckingOut) return;
+
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    try {
+      await orderService.checkoutActiveCart(paymentMethod);
+      await refreshCart();
+      setIsCartOpen(false);
+      toast.success('Dat hang thanh cong. Ban co the theo doi trong My Orders.');
+      router.push('/orders');
+    } catch (error) {
+      console.error('[CHECKOUT] checkout failed', error);
+      toast.error('Dat hang that bai. Vui long thu lai.');
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   return (
@@ -79,7 +105,7 @@ export function LandingHeader() {
               className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-full flex items-center gap-2 text-sm relative"
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>Giỏ hàng</span>
+              <span>Gio hang</span>
               {itemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-white text-red-600 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                   {itemCount}
@@ -149,7 +175,7 @@ export function LandingHeader() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
                   >
                     <option value="EN">English</option>
-                    <option value="VN">Tiếng Việt</option>
+                    <option value="VN">Tieng Viet</option>
                   </select>
                 </div>
               </div>
@@ -168,8 +194,15 @@ export function LandingHeader() {
         onRemoveItem={(id) => {
           void removeItem(id);
         }}
+        onCheckout={(paymentMethod) => {
+          void handleCheckout(paymentMethod);
+        }}
+        checkoutLoading={isCheckingOut}
       />
     </header>
   );
 }
+
+
+
 

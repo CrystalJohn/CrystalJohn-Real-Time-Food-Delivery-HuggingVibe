@@ -1,12 +1,14 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Search, MapPin, ClipboardList, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import { useAuth } from '@/features/auth';
 import { useCart } from '@/features/cart';
+import { orderService, type PaymentMethod } from '@/features/orders';
 import { CartSidebar } from '@/components/shared/CartSidebar';
 import { ProfileMenu } from '@/components/shared/ProfileMenu';
 
@@ -17,9 +19,10 @@ export function CustomerHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user, logout } = useAuth();
-  const { itemCount, items, updateQuantity, removeItem } = useCart();
+  const { user, logout, isAuthenticated } = useAuth();
+  const { itemCount, items, updateQuantity, removeItem, refreshCart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -58,6 +61,29 @@ export function CustomerHeader() {
     router.push('/login');
   };
 
+  const handleCheckout = async (paymentMethod: PaymentMethod) => {
+    if (isCheckingOut) return;
+
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    try {
+      await orderService.checkoutActiveCart(paymentMethod);
+      await refreshCart();
+      setIsCartOpen(false);
+      toast.success('Dat hang thanh cong. Ban co the theo doi trong My Orders.');
+      router.push('/orders');
+    } catch (error) {
+      console.error('[CHECKOUT] checkout failed', error);
+      toast.error('Dat hang that bai. Vui long thu lai.');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
   const sidebarItems = items.map((item) => ({
     id: item.id,
     name: item.name,
@@ -79,7 +105,7 @@ export function CustomerHeader() {
               <span className="text-white font-bold text-xl">F</span>
             </motion.div>
             <span className="hidden md:block text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
-              FoodGo🍕
+              FoodGo
             </span>
           </Link>
 
@@ -143,7 +169,14 @@ export function CustomerHeader() {
         onRemoveItem={(id) => {
           void removeItem(id);
         }}
+        onCheckout={(paymentMethod) => {
+          void handleCheckout(paymentMethod);
+        }}
+        checkoutLoading={isCheckingOut}
       />
     </>
   );
 }
+
+
+

@@ -1,11 +1,13 @@
-'use client';
+﻿'use client';
 
+import { useState } from 'react';
 import { X, Trash2, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 
 const currencyFormatter = new Intl.NumberFormat('vi-VN');
+type PaymentMethod = 'CASH' | 'WALLET';
 
 interface CartItem {
   id: string;
@@ -21,6 +23,8 @@ interface CartSidebarProps {
   items?: CartItem[];
   onUpdateQuantity?: (id: string, quantity: number) => void;
   onRemoveItem?: (id: string) => void;
+  onCheckout?: (paymentMethod: PaymentMethod) => void | Promise<void>;
+  checkoutLoading?: boolean;
 }
 
 export function CartSidebar({
@@ -29,8 +33,11 @@ export function CartSidebar({
   items = [],
   onUpdateQuantity,
   onRemoveItem,
+  onCheckout,
+  checkoutLoading = false,
 }: CartSidebarProps) {
   const totalAmount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
 
   return (
     <AnimatePresence>
@@ -97,7 +104,7 @@ export function CartSidebar({
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <span className="font-bold text-red-600 text-sm">
-                            {currencyFormatter.format(item.price * item.quantity)}đ
+                            {currencyFormatter.format(item.price * item.quantity)} VND
                           </span>
                           <div className="flex items-center gap-3 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
                             <button
@@ -127,11 +134,48 @@ export function CartSidebar({
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500 font-medium">Total</span>
                   <span className="text-2xl font-black text-red-600">
-                    {currencyFormatter.format(totalAmount)}đ
+                    {currencyFormatter.format(totalAmount)} VND
                   </span>
                 </div>
-                <Button className="w-full bg-red-600 hover:bg-red-700 text-white rounded-full py-6 text-lg font-bold">
-                  Checkout Now <span className="ml-2">{">"}</span>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-gray-700">Payment Method</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('CASH')}
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                        paymentMethod === 'CASH'
+                          ? 'border-red-600 bg-red-50 text-red-700'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      CASH
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('WALLET')}
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                        paymentMethod === 'WALLET'
+                          ? 'border-red-600 bg-red-50 text-red-700'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      WALLET
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    if (onCheckout) {
+                      void onCheckout(paymentMethod);
+                    }
+                  }}
+                  disabled={checkoutLoading || !onCheckout}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white rounded-full py-6 text-lg font-bold"
+                >
+                  {checkoutLoading ? 'Processing...' : 'Checkout Now >'}
                 </Button>
               </div>
             )}
