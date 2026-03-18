@@ -1,113 +1,138 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { authStorage } from '@/features/auth/auth.storage';
 
-// Base URL from environment variables (Next.js uses process.env)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-if (typeof window !== 'undefined') {
-  console.log('API_BASE_URL:', API_BASE_URL);
+
+const AUTH_ENDPOINT_PREFIXES = ['/auth/login', '/auth/register'];
+const AUTH_PAGES = ['/login', '/register'];
+
+function toArray(value: unknown): string[] | undefined {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string');
+  }
+  return undefined;
 }
-// ============================================================================
-// Axios Instance
-// ============================================================================
+
+function normalizeRequestPath(url?: string): string {
+  if (!url) return '';
+
+  try {
+    const parsedUrl = new URL(url, API_BASE_URL);
+    return parsedUrl.pathname.replace(/\/+$/, '');
+  } catch {
+    return url.split('?')[0].replace(/\/+$/, '');
+  }
+}
+
+function isAuthEndpoint(url?: string): boolean {
+  const normalizedPath = normalizeRequestPath(url);
+  return AUTH_ENDPOINT_PREFIXES.some((prefix) => normalizedPath.endsWith(prefix));
+}
+
+function shouldRedirectOnUnauthorized(error: AxiosError): boolean {
+  if (error.response?.status !== 401) return false;
+  if (isAuthEndpoint(error.config?.url)) return false;
+  if (typeof window === 'undefined') return false;
+  return !AUTH_PAGES.includes(window.location.pathname);
+}
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,  // tự động fail sau 10s
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// ============================================================================
-// Request Interceptor - Auto Attach JWT for all requests
-// ============================================================================
-
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = authStorage.getToken();  // check token từ auth-storage (LocalStorage)
-    if (token) {  
-      config.headers.Authorization = `Bearer ${token}`;   // có token thì attach vào header
+    const token = authStorage.getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-  }, 
-  (error: AxiosError) => {
-    // Nếu Backend trả về 401 (Unauthorized)
-    if (error.response && error.response.status === 401) {
-    authStorage.removeToken(); // xoá token trong localStorage  
-  }
-    return Promise.reject(error);   // nếu req fail thì reject ko retry
-  }
+  },
+  (error: AxiosError) => Promise.reject(error),
 );
 
-// ============================================================================
-// Response Interceptor - Handle 401
-// ============================================================================
-
 axiosInstance.interceptors.response.use(
-  (response) => {
-    return response.data;   // Case success, trả về data luôn
-  },
+  (response) => response.data,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      authStorage.removeToken(); // xoá token trong localStorage
+      authStorage.removeToken();
 
-      if (typeof window !== 'undefined') {  // check brower trc khi redirect
-        window.location.href = '/login'; // redirect tới login
+      if (shouldRedirectOnUnauthorized(error)) {
+        window.location.assign('/login');
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
-
-// ============================================================================
-// Error Handling
-// ============================================================================
 
 export class ApiError extends Error {
   constructor(
     public statusCode: number,
     public message: string,
-    public errors?: Record<string, string[]>
+    public errors?: Record<string, string[]>,
   ) {
     super(message);
     this.name = 'ApiError';
   }
 }
 
-function transformError(error: AxiosError): ApiError {
-  if (error.response) {
-    const data = error.response.data as Record<string, unknown>;
-    
-    return new ApiError(
-      error.response.status,
-      (data?.message as string) || error.message,
-      data?.errors as Record<string, string[]> | undefined
-    );
-  } else if (error.request) {
-    return new ApiError(0, 'Network error. Please check your connection.');
-  } else {
-    return new ApiError(0, error.message);
+function readErrorMessage(data: Record<string, unknown>, fallback: string): string {
+  const rawMessage = data?.message;
+
+  if (typeof rawMessage === 'string' && rawMessage.trim().length > 0) {
+    return rawMessage;
   }
+
+  const messageList = toArray(rawMessage);
+  if (messageList && messageList.length > 0) {
+    return messageList.join(', ');
+  }
+
+  return fallback;
 }
 
-// ============================================================================
-// Type-Safe API Methods
-// ============================================================================
+function transformError(error: AxiosError): ApiError {
+  if (error.response) {
+    const data = (error.response.data as Record<string, unknown>) || {};
+    const rawErrors = data?.errors;
+
+    return new ApiError(
+      error.response.status,
+      readErrorMessage(data, error.message),
+      typeof rawErrors === 'object' && rawErrors !== null
+        ? (rawErrors as Record<string, string[]>)
+        : undefined,
+    );
+  }
+
+  if (error.request) {
+    return new ApiError(0, 'Network error. Please check your connection.');
+  }
+
+  return new ApiError(0, error.message);
+}
 
 export const api = {
-  // Get request
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      // Response interceptor đã return response.data, nên không cần .data ở đây
-      return await axiosInstance.get(url, config) as T;
+      return (await axiosInstance.get(url, config)) as T;
     } catch (error) {
       throw transformError(error as AxiosError);
     }
   },
-  // Đặt <T> là type parameter  
+
   async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     try {
-      return await axiosInstance.post(url, data, config) as T;
+      return (await axiosInstance.post(url, data, config)) as T;
     } catch (error) {
       throw transformError(error as AxiosError);
     }
@@ -115,7 +140,7 @@ export const api = {
 
   async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     try {
-      return await axiosInstance.put(url, data, config) as T;
+      return (await axiosInstance.put(url, data, config)) as T;
     } catch (error) {
       throw transformError(error as AxiosError);
     }
@@ -123,16 +148,15 @@ export const api = {
 
   async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     try {
-      return await axiosInstance.patch(url, data, config) as T;
+      return (await axiosInstance.patch(url, data, config)) as T;
     } catch (error) {
       throw transformError(error as AxiosError);
     }
   },
 
-  // Delete request
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      return await axiosInstance.delete(url, config) as T;
+      return (await axiosInstance.delete(url, config)) as T;
     } catch (error) {
       throw transformError(error as AxiosError);
     }

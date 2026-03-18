@@ -6,18 +6,28 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
 import { RegisterForm } from '@/features/auth/RegisterForm';
+import { ROUTES } from '@/lib/constants';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
+  const getRoleRedirectPath = (role: string): string => {
+    const roleRoutes: Record<string, string> = {
+      CUSTOMER: ROUTES.CUSTOMER,
+      STAFF: ROUTES.STAFF,
+      DRIVER: ROUTES.DRIVER,
+      ADMIN: ROUTES.ADMIN,
+    };
+
+    return roleRoutes[role] || ROUTES.CUSTOMER;
+  };
+
   // Redirect if already logged in
   useEffect(() => {
     if (user && !authLoading) {
-      if (user.role === 'CUSTOMER') router.push('/menu');
-      else if (user.role === 'STAFF') router.push('/staff/tickets');
-      else if (user.role === 'DRIVER') router.push('/driver/jobs');
-      else if (user.role === 'ADMIN') router.push('/admin/dashboard');
+      const redirectPath = getRoleRedirectPath(user.role);
+      router.push(redirectPath);
     }
   }, [user, authLoading, router]);
 

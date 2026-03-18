@@ -6,10 +6,36 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/useAuth';
 import { ApiError } from '@/lib/api';
+import { ROUTES } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Eye, EyeOff } from 'lucide-react';
+
+interface LoginFieldErrors {
+  email?: string;
+  password?: string;
+}
+
+function getFirstFieldError(value?: string[]): string | undefined {
+  return value && value.length > 0 ? value[0] : undefined;
+}
+
+function mapLoginFieldErrors(error: ApiError): LoginFieldErrors {
+  const fieldErrors: LoginFieldErrors = {
+    email: getFirstFieldError(error.errors?.email),
+    password: getFirstFieldError(error.errors?.password),
+  };
+
+  if (!fieldErrors.email && !fieldErrors.password && error.statusCode === 401) {
+    return {
+      email: 'Email or password is incorrect.',
+      password: 'Email or password is incorrect.',
+    };
+  }
+
+  return fieldErrors;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,17 +45,31 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
+
+  const getRoleRedirectPath = (role: string): string => {
+    const roleRoutes: Record<string, string> = {
+      CUSTOMER: ROUTES.CUSTOMER,
+      STAFF: ROUTES.STAFF,
+      DRIVER: ROUTES.DRIVER,
+      ADMIN: ROUTES.ADMIN,
+    };
+
+    return roleRoutes[role] || ROUTES.CUSTOMER;
+  };
 
   // Redirect if already logged in
   useEffect(() => {
     if (user && !authLoading) {
-      router.push('/');
+      const redirectPath = getRoleRedirectPath(user.role);
+      router.push(redirectPath);
     }
   }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
     setLoading(true);
 
     try {
@@ -38,10 +78,12 @@ export default function LoginPage() {
       let message = 'Login failed. Please try again.';
       if (err instanceof ApiError) {
         message = err.message;
+        setFieldErrors(mapLoginFieldErrors(err));
       } else if (err instanceof Error) {
         message = err.message;
       }
       setError(message);
+    } finally {
       setLoading(false);
     }
   };
@@ -86,10 +128,16 @@ export default function LoginPage() {
                 placeholder="name@example.com"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                }}
                 required
-                className="h-11"
+                className={`h-11 ${fieldErrors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
+              {fieldErrors.email && (
+                <p className="text-xs text-red-600">{fieldErrors.email}</p>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -107,9 +155,12 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
                   required
-                  className="h-11 pr-10"
+                  className={`h-11 pr-10 ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                 />
                 <button
                   type="button"
@@ -123,9 +174,12 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <p className="text-xs text-red-600">{fieldErrors.password}</p>
+              )}
             </div>
 
-            {error && (
+            {error && !fieldErrors.email && !fieldErrors.password && (
               <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md">
                 {error}
               </div>

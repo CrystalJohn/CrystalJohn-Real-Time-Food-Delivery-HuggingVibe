@@ -3,9 +3,9 @@ export const API_BASE_URL =
 
 export const ROUTES = {
   CUSTOMER: '/menu',
-  STAFF: '/staff/tickets',
-  DRIVER: '/driver/jobs',
-  ADMIN: '/admin/dashboard',
+  STAFF: '/tickets',
+  DRIVER: '/jobs',
+  ADMIN: '/admin/staffs',
   menu: "/menu",
   cart: "/cart",
   orders: (id: string) => `/orders/${id}`,

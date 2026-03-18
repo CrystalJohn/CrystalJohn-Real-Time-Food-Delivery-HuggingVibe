@@ -10,6 +10,44 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Eye, EyeOff } from 'lucide-react';
 
+interface RegisterFieldErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  phone?: string;
+  agreeTerms?: string;
+}
+
+function getFirstFieldError(value?: string[]): string | undefined {
+  return value && value.length > 0 ? value[0] : undefined;
+}
+
+function mapRegisterFieldErrors(error: ApiError): RegisterFieldErrors {
+  const fieldErrors: RegisterFieldErrors = {
+    name: getFirstFieldError(error.errors?.name) ?? getFirstFieldError(error.errors?.fullName),
+    email: getFirstFieldError(error.errors?.email),
+    password: getFirstFieldError(error.errors?.password),
+    phone: getFirstFieldError(error.errors?.phone),
+  };
+
+  const message = error.message.toLowerCase();
+
+  if (!fieldErrors.email && message.includes('email')) {
+    fieldErrors.email = error.message;
+  }
+
+  if (!fieldErrors.password && message.includes('password')) {
+    fieldErrors.password = error.message;
+  }
+
+  if (!fieldErrors.name && (message.includes('name') || message.includes('full name'))) {
+    fieldErrors.name = error.message;
+  }
+
+  return fieldErrors;
+}
+
 export function RegisterForm() {
   const router = useRouter();
   const { register, user } = useAuth();
@@ -25,6 +63,7 @@ export function RegisterForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<RegisterFieldErrors>({});
 
   // Helper function - role-based redirect
   const getRoleRedirectPath = (role: string): string => {
@@ -53,11 +92,18 @@ export function RegisterForm() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: undefined,
+    }));
   };
 
   const validateForm = (): boolean => {
+    setFieldErrors({});
+
     // Name validation
     if (formData.name.trim().length < 3) {
+      setFieldErrors({ name: 'Name must be at least 3 characters long' });
       setError('Name must be at least 3 characters long');
       return false;
     }
@@ -65,30 +111,35 @@ export function RegisterForm() {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
+      setFieldErrors({ email: 'Please enter a valid email address' });
       setError('Please enter a valid email address');
       return false;
     }
 
     // Password validation
     if (formData.password.length < 8) {
+      setFieldErrors({ password: 'Password must be at least 8 characters long' });
       setError('Password must be at least 8 characters long');
       return false;
     }
 
     // Confirm password validation
     if (formData.password !== formData.confirmPassword) {
+      setFieldErrors({ confirmPassword: 'Passwords do not match' });
       setError('Passwords do not match');
       return false;
     }
 
     // Phone validation
     if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) {
+      setFieldErrors({ phone: 'Phone number must be 10-11 digits' });
       setError('Phone number must be 10-11 digits');
       return false;
     }
 
     // Terms validation
     if (!formData.agreeTerms) {
+      setFieldErrors({ agreeTerms: 'You must agree to the Terms and Conditions' });
       setError('You must agree to the Terms and Conditions');
       return false;
     }
@@ -99,6 +150,7 @@ export function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
 
     if (!validateForm()) {
       return;
@@ -118,10 +170,12 @@ export function RegisterForm() {
       let message = 'Registration failed. Please try again.';
       if (err instanceof ApiError) {
         message = err.message;
+        setFieldErrors(mapRegisterFieldErrors(err));
       } else if (err instanceof Error) {
         message = err.message;
       }
       setError(message);
+    } finally {
       setLoading(false);
     }
   };
@@ -139,8 +193,11 @@ export function RegisterForm() {
           value={formData.name}
           onChange={handleChange}
           required
-          className="h-11"
+          className={`h-11 ${fieldErrors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
         />
+        {fieldErrors.name && (
+          <p className="text-xs text-red-600">{fieldErrors.name}</p>
+        )}
       </div>
 
       {/* Email */}
@@ -154,8 +211,11 @@ export function RegisterForm() {
           value={formData.email}
           onChange={handleChange}
           required
-          className="h-11"
+          className={`h-11 ${fieldErrors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
         />
+        {fieldErrors.email && (
+          <p className="text-xs text-red-600">{fieldErrors.email}</p>
+        )}
       </div>
 
       {/* Phone */}
@@ -168,8 +228,11 @@ export function RegisterForm() {
           type="tel"
           value={formData.phone}
           onChange={handleChange}
-          className="h-11"
+          className={`h-11 ${fieldErrors.phone ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
         />
+        {fieldErrors.phone && (
+          <p className="text-xs text-red-600">{fieldErrors.phone}</p>
+        )}
       </div>
 
       {/* Password */}
@@ -184,7 +247,7 @@ export function RegisterForm() {
             value={formData.password}
             onChange={handleChange}
             required
-            className="h-11 pr-10"
+            className={`h-11 pr-10 ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
           />
           <button
             type="button"
@@ -198,6 +261,9 @@ export function RegisterForm() {
             )}
           </button>
         </div>
+        {fieldErrors.password && (
+          <p className="text-xs text-red-600">{fieldErrors.password}</p>
+        )}
       </div>
 
       {/* Confirm Password */}
@@ -212,7 +278,7 @@ export function RegisterForm() {
             value={formData.confirmPassword}
             onChange={handleChange}
             required
-            className="h-11 pr-10"
+            className={`h-11 pr-10 ${fieldErrors.confirmPassword ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
           />
           <button
             type="button"
@@ -226,6 +292,9 @@ export function RegisterForm() {
             )}
           </button>
         </div>
+        {fieldErrors.confirmPassword && (
+          <p className="text-xs text-red-600">{fieldErrors.confirmPassword}</p>
+        )}
       </div>
 
       {/* Terms and Conditions */}
@@ -249,9 +318,18 @@ export function RegisterForm() {
           </a>
         </label>
       </div>
+      {fieldErrors.agreeTerms && (
+        <p className="text-xs text-red-600">{fieldErrors.agreeTerms}</p>
+      )}
 
       {/* Error Message */}
-      {error && (
+      {error &&
+        !fieldErrors.name &&
+        !fieldErrors.email &&
+        !fieldErrors.password &&
+        !fieldErrors.confirmPassword &&
+        !fieldErrors.phone &&
+        !fieldErrors.agreeTerms && (
         <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md">
           {error}
         </div>
