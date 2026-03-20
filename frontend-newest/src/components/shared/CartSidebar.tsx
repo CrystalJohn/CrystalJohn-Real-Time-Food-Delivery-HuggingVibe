@@ -59,7 +59,9 @@ export function CartSidebar({
     checkoutLoading ||
     !onCheckout ||
     !hasCoords ||
-    (distanceInfo ? !isWithinRadius : false);
+    distanceLoading ||
+    !distanceInfo ||
+    !isWithinRadius;
 
   useEffect(() => {
     if (!isOpen || !hasCoords) {

@@ -13,6 +13,15 @@ export interface StaffOrderDriver {
   fullName?: string;
   name?: string;
   phone?: string;
+  isOnline?: boolean;
+  status?: string;
+  vehicleType?: string | null;
+  licensePlate?: string | null;
+  currentLocation?: {
+    lat?: number | null;
+    lng?: number | null;
+    lastLocationAt?: string | null;
+  } | null;
 }
 
 export interface StaffOrderMenuItem {
@@ -52,6 +61,45 @@ export interface StaffOrderResponse {
   notes?: string;
 }
 
+export interface StaffOrderTrackingLocation {
+  addressText?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}
+
+export interface StaffOrderTrackingStore {
+  name?: string;
+  address?: string;
+  lat?: number | null;
+  lng?: number | null;
+}
+
+export interface StaffOrderTrackingResponse {
+  orderId: string;
+  status: OrderStatus;
+  driver?: StaffOrderDriver | null;
+  delivery?: StaffOrderTrackingLocation | null;
+  store?: StaffOrderTrackingStore | null;
+  assignedAt?: string | null;
+  pickedUpAt?: string | null;
+  deliveredAt?: string | null;
+  driverConfirmedDelivered?: boolean;
+  customerConfirmedDelivered?: boolean;
+}
+
+export interface StaffAvailableDriver {
+  userId: string;
+  fullName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  userIsActive?: boolean;
+  status?: string;
+  isOnline?: boolean;
+  vehicleType?: string | null;
+  licensePlate?: string | null;
+  updatedAt?: string | null;
+}
+
 export const staffService = {
   async getOrders(): Promise<StaffOrderResponse[]> {
     return api.get<StaffOrderResponse[]>('/staff/orders');
@@ -59,6 +107,10 @@ export const staffService = {
 
   async getOrderById(orderId: string): Promise<StaffOrderResponse> {
     return api.get<StaffOrderResponse>(`/staff/orders/${orderId}`);
+  },
+
+  async getOrderTracking(orderId: string): Promise<StaffOrderTrackingResponse> {
+    return api.get<StaffOrderTrackingResponse>(`/staff/orders/${orderId}/tracking`);
   },
 
   // PATCH /api/staff/orders/{orderId}/status
@@ -69,8 +121,15 @@ export const staffService = {
     return api.patch<StaffOrderResponse>(`/staff/orders/${orderId}/status`, { status });
   },
 
-  async assignDriver(orderId: string): Promise<StaffOrderResponse> {
-    return api.patch<StaffOrderResponse>(`/staff/orders/${orderId}/assign-driver`);
+  async getAvailableDrivers(): Promise<StaffAvailableDriver[]> {
+    const data = await api.get<StaffAvailableDriver[] | StaffAvailableDriver>(
+      '/staff/orders/available-drivers',
+    );
+    return Array.isArray(data) ? data : data ? [data] : [];
+  },
+
+  async assignDriver(orderId: string, driverId: string): Promise<StaffOrderResponse> {
+    return api.patch<StaffOrderResponse>(`/staff/orders/${orderId}/assign-driver`, { driverId });
   },
 
   async cancelOrder(orderId: string, reason: string): Promise<StaffOrderResponse> {

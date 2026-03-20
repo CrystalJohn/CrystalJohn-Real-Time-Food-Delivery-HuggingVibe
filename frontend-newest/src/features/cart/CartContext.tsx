@@ -65,7 +65,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(cart.items);
     } catch (error) {
       if (error instanceof ApiError && error.statusCode === 404) {
-        console.error('[CartContext.refreshCart] 404 customer/cart not found', {
+        console.info('[CartContext.refreshCart] cart not found, treating as empty cart', {
           statusCode: error.statusCode,
           message: error.message,
         });
