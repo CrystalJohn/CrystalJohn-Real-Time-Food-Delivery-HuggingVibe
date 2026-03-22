@@ -1,15 +1,19 @@
 'use client';
 
-import { LandingHeader } from '@/components/layout/LandingHeader';
-import { LandingFooter } from '@/components/layout/LandingFooter';
+import { RolePanelShell } from '@/components/layout/RolePanelShell';
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col min-h-screen">
-      <LandingHeader />
-      <main className="flex-1">{children}</main>
-      <LandingFooter />
-    </div>
+    <RolePanelShell
+      role="STAFF"
+      homeHref="/tickets"
+      panelTitle="Staff Management"
+      navItems={[
+        { href: '/tickets', label: 'Kitchen Queue' },
+        { href: '/staff/menu', label: 'Menu Availability' },
+      ]}
+    >
+      {children}
+    </RolePanelShell>
   );
 }
-

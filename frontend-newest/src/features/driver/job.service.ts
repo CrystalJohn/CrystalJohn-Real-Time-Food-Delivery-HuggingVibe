@@ -110,6 +110,7 @@ function mapBeOrderToDetail(be: BeDriverOrder): DeliveryJobDetail {
 
   const pickupAddress =
     be.pickupAddress?.trim() || be.store?.address?.trim() || 'Store';
+
   const deliveryAddress =
     be.deliveryAddress?.trim() || be.delivery?.addressText?.trim() || '';
 
@@ -141,7 +142,10 @@ function mapBeOrderToDetail(be: BeDriverOrder): DeliveryJobDetail {
     customerConfirmedDelivered: be.customerConfirmedDelivered ?? undefined,
     storeName: be.store?.name ?? undefined,
     items,
-    createdAt: typeof be.createdAt === 'string' ? be.createdAt : new Date(be.createdAt).toISOString(),
+    createdAt:
+      typeof be.createdAt === 'string'
+        ? be.createdAt
+        : new Date(be.createdAt).toISOString(),
     assignedAt: be.assignedAt ?? undefined,
     pickedUpAt: be.pickedUpAt ?? undefined,
     deliveredAt: be.deliveredAt ?? undefined,
@@ -162,12 +166,34 @@ function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
       reject(new Error('Geolocation not supported'));
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => reject(err),
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 },
     );
   });
+}
+
+export function getDeliveryConfirmationMessage(
+  detail: Pick<
+    DeliveryJobDetail,
+    'statusRaw' | 'driverConfirmedDelivered' | 'customerConfirmedDelivered' | 'deliveredAt'
+  >,
+): string {
+  if (detail.statusRaw === 'DELIVERED' || detail.deliveredAt) {
+    return 'Delivery completed successfully.';
+  }
+
+  if (detail.driverConfirmedDelivered && !detail.customerConfirmedDelivered) {
+    return 'Driver confirmed handoff. Waiting for customer confirmation.';
+  }
+
+  if (detail.driverConfirmedDelivered && detail.customerConfirmedDelivered) {
+    return 'Delivery completed successfully.';
+  }
+
+  return 'Delivery confirmation updated.';
 }
 
 export const jobService = {
@@ -186,18 +212,19 @@ export const jobService = {
     }
   },
 
-  async pickupJob(orderId: string): Promise<DeliveryJob> {
+  async pickupJob(orderId: string): Promise<DeliveryJobDetail> {
     const be = await api.patch<BeDriverOrder>(`/driver/orders/${orderId}/pick-up`);
-    return mapBeOrderToJob(be);
+    return mapBeOrderToDetail(be);
   },
 
-  async deliverJob(orderId: string): Promise<DeliveryJob> {
+  async deliverJob(orderId: string): Promise<DeliveryJobDetail> {
     const be = await api.patch<BeDriverOrder>(`/driver/orders/${orderId}/confirm-delivered`);
-    return mapBeOrderToJob(be);
+    return mapBeOrderToDetail(be);
   },
 
   async updateMyLocation(orderId: string): Promise<void> {
     const { lat, lng } = await getCurrentPosition();
+
     await api.patch(`/driver/orders/${orderId}/location`, {
       currentLat: lat,
       currentLng: lng,

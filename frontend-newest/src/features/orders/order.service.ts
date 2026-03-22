@@ -38,6 +38,16 @@ function asNumber(value: unknown): number | undefined {
   return undefined;
 }
 
+function asBoolean(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+  }
+  return undefined;
+}
+
 function getNestedRecord(value: unknown, key: string): UnknownRecord | undefined {
   if (!isRecord(value)) return undefined;
   const nested = value[key];
@@ -91,12 +101,9 @@ function normalizeOrder(raw: unknown): Order {
   const driverLocation = getNestedRecord(record, 'driverLocation');
   const itemsRaw = Array.isArray(record.items) ? record.items : [];
   const items = itemsRaw.map((item, index) => normalizeOrderItem(item, index));
-  const deliveryLat = asNumber(
-    record.deliveryLat ?? delivery?.lat ?? deliveryLocation?.lat,
-  );
-  const deliveryLng = asNumber(
-    record.deliveryLng ?? delivery?.lng ?? deliveryLocation?.lng,
-  );
+
+  const deliveryLat = asNumber(record.deliveryLat ?? delivery?.lat ?? deliveryLocation?.lat);
+  const deliveryLng = asNumber(record.deliveryLng ?? delivery?.lng ?? deliveryLocation?.lng);
 
   const totalAmount =
     asNumber(record.totalAmount) ??
@@ -122,10 +129,15 @@ function normalizeOrder(raw: unknown): Order {
     updatedAt: asString(record.updatedAt ?? record.updated_at),
     confirmedAt: asString(record.confirmedAt),
     deliveredAt: asString(record.deliveredAt),
+
+    driverConfirmedDelivered: asBoolean(record.driverConfirmedDelivered) ?? false,
+    customerConfirmedDelivered: asBoolean(record.customerConfirmedDelivered) ?? false,
+
     deliveryLocation:
       deliveryLat != null && deliveryLng != null
         ? { lat: deliveryLat, lng: deliveryLng }
         : null,
+
     driverLocation: (() => {
       const fromFlat =
         driverLocation &&
@@ -137,8 +149,9 @@ function normalizeOrder(raw: unknown): Order {
               timestamp: asString(driverLocation.timestamp) ?? null,
             }
           : null;
+
       if (fromFlat) return fromFlat;
-      // BE tracking shape: driver.currentLocation { lat, lng, lastLocationAt }
+
       if (
         driverCurrentLocation &&
         asNumber(driverCurrentLocation.lat) != null &&
@@ -153,6 +166,7 @@ function normalizeOrder(raw: unknown): Order {
             null,
         };
       }
+
       return null;
     })(),
   };
@@ -194,10 +208,12 @@ function normalizeSingleOrder(payload: unknown): Order {
 
 function mergeTrackingIntoOrder(order: Order, trackingRaw: unknown): Order {
   if (!isRecord(trackingRaw)) return order;
+
   let next = { ...order };
 
   const driver = getNestedRecord(trackingRaw, 'driver');
   const currentLocation = driver ? getNestedRecord(driver, 'currentLocation') : undefined;
+
   if (
     currentLocation &&
     asNumber(currentLocation.lat) != null &&
@@ -216,15 +232,35 @@ function mergeTrackingIntoOrder(order: Order, trackingRaw: unknown): Order {
   const delivery = getNestedRecord(trackingRaw, 'delivery');
   const tLat = asNumber(delivery?.lat);
   const tLng = asNumber(delivery?.lng);
+
   if (tLat != null && tLng != null && !next.deliveryLocation) {
-    next = { ...next, deliveryLocation: { lat: tLat, lng: tLng } };
+    next = {
+      ...next,
+      deliveryLocation: { lat: tLat, lng: tLng },
+    };
+  }
+
+  const trackingDriverConfirmed = asBoolean(trackingRaw.driverConfirmedDelivered);
+  const trackingCustomerConfirmed = asBoolean(trackingRaw.customerConfirmedDelivered);
+
+  if (trackingDriverConfirmed !== undefined) {
+    next = {
+      ...next,
+      driverConfirmedDelivered: trackingDriverConfirmed,
+    };
+  }
+
+  if (trackingCustomerConfirmed !== undefined) {
+    next = {
+      ...next,
+      customerConfirmedDelivered: trackingCustomerConfirmed,
+    };
   }
 
   return next;
 }
 
 export const orderService = {
-  // Legacy path retained for cart-page flow compatibility.
   async create(data: CreateOrderRequest): Promise<Order> {
     const payload = await api.post<unknown>('/orders', data);
     return normalizeSingleOrder(payload);
@@ -238,6 +274,7 @@ export const orderService = {
   async getById(id: string): Promise<Order> {
     const payload = await api.get<unknown>(`/orders/${id}`);
     const order = normalizeSingleOrder(payload);
+
     try {
       const trackingPayload = await api.get<unknown>(`/orders/${id}/tracking`);
       return mergeTrackingIntoOrder(order, trackingPayload);
@@ -253,6 +290,11 @@ export const orderService = {
 
   async cancelOrder(id: string): Promise<Order> {
     const payload = await api.patch<unknown>(`/orders/${id}/cancel`);
+    return normalizeSingleOrder(payload);
+  },
+
+  async confirmDelivered(id: string): Promise<Order> {
+    const payload = await api.patch<unknown>(`/orders/${id}/confirm-delivered`);
     return normalizeSingleOrder(payload);
   },
 };

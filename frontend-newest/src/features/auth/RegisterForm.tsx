@@ -8,7 +8,7 @@ import { ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { Eye, EyeOff, MapPin, Navigation } from 'lucide-react';
+import { Eye, EyeOff, MapPin } from 'lucide-react';
 import { useGoogleMaps } from '@/lib/GoogleMapsProvider';
 
 interface RegisterFieldErrors {
@@ -39,72 +39,6 @@ function geoWarn(event: string, payload?: GeoLogPayload) {
     at: new Date().toISOString(),
     ...(payload ?? {}),
   });
-}
-
-function geoError(event: string, payload?: GeoLogPayload) {
-  const fallbackPayload = payload && Object.keys(payload).length > 0 ? payload : { note: 'no_payload' };
-  console.warn(`${GEO_LOG_PREFIX} ${event}`, {
-    at: new Date().toISOString(),
-    ...fallbackPayload,
-  });
-}
-
-function getGeolocationErrorDetails(error: unknown) {
-  if (typeof error === 'object' && error !== null && 'code' in error) {
-    const geoError = error as GeolocationPositionError;
-    const codeName =
-      geoError.code === geoError.PERMISSION_DENIED
-        ? 'PERMISSION_DENIED'
-        : geoError.code === geoError.POSITION_UNAVAILABLE
-          ? 'POSITION_UNAVAILABLE'
-          : geoError.code === geoError.TIMEOUT
-            ? 'TIMEOUT'
-            : 'UNKNOWN';
-
-    return {
-      code: geoError.code,
-      codeName,
-      message: geoError.message || codeName,
-    };
-  }
-
-  if (error instanceof Error) {
-    return {
-      code: undefined,
-      codeName: 'UNKNOWN',
-      message: error.message,
-    };
-  }
-
-  return {
-    code: undefined,
-    codeName: 'UNKNOWN',
-    message: String(error),
-  };
-}
-
-function getCurrentPosition(options: PositionOptions): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(resolve, reject, options);
-  });
-}
-
-function getGeolocationErrorMessage(error: unknown): string {
-  const details = getGeolocationErrorDetails(error);
-
-  if (details.codeName === 'PERMISSION_DENIED') {
-    return 'Location permission is blocked. Please allow location access in your browser settings.';
-  }
-
-  if (details.codeName === 'POSITION_UNAVAILABLE') {
-    return 'Current location is unavailable. Please try again or enter your address manually.';
-  }
-
-  if (details.codeName === 'TIMEOUT') {
-    return 'Location request timed out. Please try again in a place with better signal.';
-  }
-
-  return 'Could not get your location. Please allow Location permission or enter your address manually.';
 }
 
 function getFirstFieldError(value?: string[]): string | undefined {
@@ -154,7 +88,6 @@ export function RegisterForm() {
   const { register, user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const locationAttemptRef = useRef(0);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -166,7 +99,6 @@ export function RegisterForm() {
     agreeTerms: false,
   });
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [loadingLocation, setLoadingLocation] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -192,37 +124,6 @@ export function RegisterForm() {
       router.push(redirectPath);
     }
   }, [user, loading, router]);
-
-  useEffect(() => {
-    if (!navigator.permissions?.query) {
-      geoWarn('permission_api_unsupported');
-      return;
-    }
-
-    let disposed = false;
-    let permissionStatus: PermissionStatus | null = null;
-
-    void navigator.permissions
-      .query({ name: 'geolocation' as PermissionName })
-      .then((status) => {
-        if (disposed) return;
-        permissionStatus = status;
-        geoLog('permission_state', { state: status.state });
-        status.onchange = () => {
-          geoLog('permission_state_changed', { state: status.state });
-        };
-      })
-      .catch((permissionError) => {
-        geoWarn('permission_query_failed', getGeolocationErrorDetails(permissionError));
-      });
-
-    return () => {
-      disposed = true;
-      if (permissionStatus) {
-        permissionStatus.onchange = null;
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!isPlacesLoaded || !inputRef.current || !window.google?.maps?.places) return;
@@ -297,129 +198,6 @@ export function RegisterForm() {
     }
   };
 
-  const handleUseMyLocation = () => {
-    const attempt = ++locationAttemptRef.current;
-    setError('');
-    setLoadingLocation(true);
-    geoLog('my_location_clicked', { attempt });
-
-    if (!navigator.geolocation) {
-      setError('This browser does not support location detection. Please enter your address manually.');
-      setLoadingLocation(false);
-      geoError('geolocation_not_supported', { attempt });
-      return;
-    }
-
-    const applyPosition = async (pos: GeolocationPosition, source: 'primary' | 'fallback') => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      geoLog('geolocation_success', {
-        attempt,
-        source,
-        lat,
-        lng,
-        accuracy: pos.coords.accuracy,
-        timestamp: pos.timestamp,
-      });
-
-      setCoords({ lat, lng });
-      setFieldErrors((prev) => ({
-        ...prev,
-        fullAddress: undefined,
-        lat: undefined,
-        lng: undefined,
-      }));
-
-      if (window.google?.maps?.Geocoder) {
-        try {
-          const geocoder = new window.google.maps.Geocoder();
-          const response = await geocoder.geocode({ location: { lat, lng } });
-          const formattedAddress = response.results?.[0]?.formatted_address;
-
-          if (formattedAddress) {
-            setFormData((prev) => ({
-              ...prev,
-              fullAddress: formattedAddress,
-            }));
-            geoLog('reverse_geocode_success', {
-              attempt,
-              source,
-              fullAddress: formattedAddress,
-            });
-            return;
-          }
-        } catch (geocoderError) {
-          geoWarn('reverse_geocode_failed', {
-            attempt,
-            source,
-            ...getGeolocationErrorDetails(geocoderError),
-          });
-        }
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        fullAddress: prev.fullAddress.trim() || `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-      }));
-      geoWarn('reverse_geocode_missing_address_fallback_to_coordinates', {
-        attempt,
-        source,
-        lat,
-        lng,
-      });
-    };
-
-    void (async () => {
-      const primaryOptions: PositionOptions = {
-        enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 0,
-      };
-      const fallbackOptions: PositionOptions = {
-        enableHighAccuracy: false,
-        timeout: 20000,
-        maximumAge: 60000,
-      };
-
-      try {
-        geoLog('geolocation_request_start', {
-          attempt,
-          source: 'primary',
-          options: primaryOptions,
-        });
-        const precisePosition = await getCurrentPosition(primaryOptions);
-        await applyPosition(precisePosition, 'primary');
-      } catch (primaryError) {
-        geoWarn('geolocation_request_failed', {
-          attempt,
-          source: 'primary',
-          ...getGeolocationErrorDetails(primaryError),
-        });
-        try {
-          geoLog('geolocation_request_start', {
-            attempt,
-            source: 'fallback',
-            options: fallbackOptions,
-          });
-          const fallbackPosition = await getCurrentPosition(fallbackOptions);
-          await applyPosition(fallbackPosition, 'fallback');
-        } catch (fallbackError) {
-          const finalError = fallbackError || primaryError;
-          const userMessage = getGeolocationErrorMessage(finalError);
-          setError(userMessage);
-          geoError('geolocation_request_failed_final', {
-            attempt,
-            ...getGeolocationErrorDetails(finalError),
-            userMessage,
-          });
-        }
-      } finally {
-        setLoadingLocation(false);
-        geoLog('my_location_flow_finished', { attempt });
-      }
-    })();
-  };
-
   const validateForm = (): boolean => {
     setFieldErrors({});
 
@@ -462,10 +240,10 @@ export function RegisterForm() {
 
     if (!coords) {
       setFieldErrors({
-        lat: 'Please pick an address suggestion or use My Location',
-        lng: 'Please pick an address suggestion or use My Location',
+        lat: 'Please pick an address suggestion from the list',
+        lng: 'Please pick an address suggestion from the list',
       });
-      setError('Please pick an address suggestion or use My Location');
+      setError('Please pick an address suggestion from the list');
       return false;
     }
 
@@ -566,32 +344,19 @@ export function RegisterForm() {
 
       <div className="space-y-2">
         <Label htmlFor="fullAddress">Full Address</Label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleUseMyLocation}
-            disabled={loadingLocation}
-            className="h-11 whitespace-nowrap rounded-md border border-red-200 px-3 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <Navigation className="h-4 w-4" />
-              {loadingLocation ? 'Getting...' : 'My Location'}
-            </span>
-          </button>
-          <div className="relative w-full">
-            <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              ref={inputRef}
-              id="fullAddress"
-              name="fullAddress"
-              type="text"
-              placeholder="Enter full address and select suggestion"
-              value={formData.fullAddress}
-              onChange={handleChange}
-              required
-              className={`h-11 pl-10 ${fieldErrors.fullAddress || fieldErrors.lat || fieldErrors.lng ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-            />
-          </div>
+        <div className="relative w-full">
+          <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input
+            ref={inputRef}
+            id="fullAddress"
+            name="fullAddress"
+            type="text"
+            placeholder="Enter full address and select suggestion"
+            value={formData.fullAddress}
+            onChange={handleChange}
+            required
+            className={`h-11 pl-10 ${fieldErrors.fullAddress || fieldErrors.lat || fieldErrors.lng ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+          />
         </div>
 
         {!isPlacesLoaded && mapsContext?.hasApiKey && (
@@ -599,7 +364,7 @@ export function RegisterForm() {
         )}
         {mapsContext?.loadError && (
           <p className="text-xs text-amber-600">
-            Google Maps failed to load. You can still use My Location or type your address.
+            Google Maps failed to load. You can still type your address.
           </p>
         )}
         {!mapsContext?.hasApiKey && (

@@ -105,23 +105,23 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.userRepository.findOne({
       where: { email: dto.email },
+      relations: ['customerProfile', 'customerProfile.defaultAddress'],
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (!user.isActive) {
-      throw new UnauthorizedException('Account is inactive');
-    }
-
-    const isPasswordMatched = await bcrypt.compare(
+    const isPasswordValid = await bcrypt.compare(
       dto.password,
       user.passwordHash,
     );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-    if (!isPasswordMatched) {
-      throw new UnauthorizedException('Invalid email or password');
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is inactive');
     }
 
     const payload = {
@@ -137,13 +137,17 @@ export class AuthService {
         email: user.email,
         fullName: user.fullName,
         role: user.role,
+        phone: user.phone,
+        defaultAddress: this.mapDefaultAddress(
+          user.customerProfile?.defaultAddress ?? null,
+        ),
       },
     };
   }
 
   async getMe(userId: string) {
     const user = await this.userRepository.findOne({
-      where: { id: userId, isActive: true },
+      where: { id: userId },
       relations: ['customerProfile', 'customerProfile.defaultAddress'],
     });
 
@@ -156,6 +160,7 @@ export class AuthService {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      phone: user.phone,
       defaultAddress: this.mapDefaultAddress(
         user.customerProfile?.defaultAddress ?? null,
       ),

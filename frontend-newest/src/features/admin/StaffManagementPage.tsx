@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState, type ComponentType, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentType, type FormEvent } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Ban,
   BarChart3,
@@ -140,7 +141,8 @@ function containsSearchTerm(staff: StaffAccount, searchTerm: string): boolean {
 }
 
 export function StaffManagementPage() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const { staffs, loading, creating, error, createStaff, refetch } = useStaffManagement();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -150,6 +152,8 @@ export function StaffManagementPage() {
   const [formData, setFormData] = useState<CreateStaffFormState>(INITIAL_FORM_STATE);
   const [fieldErrors, setFieldErrors] = useState<CreateStaffFieldErrors>({});
   const [submitError, setSubmitError] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const filteredStaffs = useMemo(() => {
     const normalizedSearchTerm = searchTerm.trim();
@@ -158,6 +162,24 @@ export function StaffManagementPage() {
   }, [searchTerm, staffs]);
 
   const adminDisplayName = user?.name || user?.email || 'Admin';
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, []);
 
   const openCreateDialog = () => {
     setFieldErrors({});
@@ -328,15 +350,38 @@ export function StaffManagementPage() {
                 >
                   <Bell className="h-5 w-5" />
                 </button>
-                <div className="flex items-center gap-3 rounded-2xl border border-[#dddfe5] bg-white px-3 py-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
-                    {getNameInitial(adminDisplayName)}
-                  </div>
-                  <div className="hidden sm:block">
-                    <p className="text-sm font-semibold text-slate-700">{adminDisplayName}</p>
-                    <p className="text-xs text-slate-500">Quản trị viên</p>
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-slate-500" />
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsProfileOpen((prev) => !prev)}
+                    className="flex items-center gap-3 rounded-2xl border border-[#dddfe5] bg-white px-3 py-2 transition hover:bg-slate-50"
+                    aria-haspopup="menu"
+                    aria-expanded={isProfileOpen}
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
+                      {getNameInitial(adminDisplayName)}
+                    </div>
+                    <div className="hidden sm:block">
+                      <p className="text-sm font-semibold text-slate-700">{adminDisplayName}</p>
+                      <p className="text-xs text-slate-500">Quản trị viên</p>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-slate-500" />
+                  </button>
+
+                  {isProfileOpen && (
+                    <div
+                      role="menu"
+                      className="absolute right-0 mt-2 w-44 rounded-xl border border-[#e2e5ec] bg-white shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

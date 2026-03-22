@@ -1,18 +1,25 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { User as UserIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import type { User } from '@/types';
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { User as UserIcon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { User } from "@/types";
 
 interface ProfileMenuProps {
-  user: Pick<User, 'id' | 'name' | 'role' | 'phone' | 'email' | 'defaultAddress'> | null;
+  user: Pick<
+    User,
+    "id" | "name" | "role" | "phone" | "email" | "defaultAddress"
+  > | null;
   onLogout: () => void | Promise<void>;
   triggerClassName?: string;
 }
 
-export function ProfileMenu({ user, onLogout, triggerClassName }: ProfileMenuProps) {
+export function ProfileMenu({
+  user,
+  onLogout,
+  triggerClassName,
+}: ProfileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -24,17 +31,17 @@ export function ProfileMenu({ user, onLogout, triggerClassName }: ProfileMenuPro
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
@@ -43,18 +50,21 @@ export function ProfileMenu({ user, onLogout, triggerClassName }: ProfileMenuPro
     await onLogout();
   };
 
-  const role = user?.role ?? 'GUEST';
-  const isCustomer = role === 'CUSTOMER';
-  const isStaff = role === 'STAFF';
-  const isDriver = role === 'DRIVER';
-  const isAdmin = role === 'ADMIN';
+  const role = user?.role ?? "GUEST";
+  const isCustomer = role === "CUSTOMER";
+  const isStaff = role === "STAFF";
+  const isDriver = role === "DRIVER";
+  const isAdmin = role === "ADMIN";
 
   return (
     <div className="relative" ref={menuRef}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={triggerClassName ?? 'p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600'}
+        className={
+          triggerClassName ??
+          "p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+        }
         aria-expanded={isOpen}
         aria-controls="profile-menu"
         aria-haspopup="menu"
@@ -76,25 +86,39 @@ export function ProfileMenu({ user, onLogout, triggerClassName }: ProfileMenuPro
             className="absolute right-0 mt-2 w-72 rounded-xl border border-gray-200 bg-white shadow-lg z-50"
           >
             <div className="px-4 py-3 border-b border-gray-100">
-              <p className="text-sm font-semibold text-gray-900">{user?.name || '-'}</p>
-              <p className="text-xs text-gray-500">Role: {user?.role || '-'}</p>
-              <p className="text-xs text-gray-500">Email: {user?.email || '-'}</p>
-              <p className="text-xs text-gray-500">Phone: {user?.phone || '-'}</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {user?.name || "-"}
+              </p>
+              <p className="text-xs text-gray-500">Role: {user?.role || "-"}</p>
+              <p className="text-xs text-gray-500">
+                Email: {user?.email || "-"}
+              </p>
+              <p className="text-xs text-gray-500">
+                Phone: {user?.phone || "-"}
+              </p>
               <div className="mt-2 rounded-lg bg-gray-50 px-2 py-2">
-                <p className="text-[11px] font-semibold text-gray-700">Default Address</p>
-                <p className="mt-1 text-[11px] leading-4 text-gray-600 break-words">
-                  {user?.defaultAddress?.fullAddress || '-'}
+                <p className="text-[11px] font-semibold text-gray-700">
+                  Default Address
                 </p>
-                {user?.defaultAddress?.lat != null && user?.defaultAddress?.lng != null && (
-                  <p className="mt-1 text-[11px] text-gray-500">
-                    Lat: {user.defaultAddress.lat.toFixed(6)} | Lng: {user.defaultAddress.lng.toFixed(6)}
-                  </p>
-                )}
+                <p className="mt-1 text-[11px] leading-4 text-gray-600 break-words">
+                  {user?.defaultAddress?.fullAddress || "-"}
+                </p>
+                {user?.defaultAddress?.lat != null &&
+                  user?.defaultAddress?.lng != null && (
+                    <p className="mt-1 text-[11px] text-gray-500">
+                      Lat: {user.defaultAddress.lat.toFixed(6)} | Lng:{" "}
+                      {user.defaultAddress.lng.toFixed(6)}
+                    </p>
+                  )}
               </div>
               {user?.id && (
                 <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-2 py-1">
-                  <p className="text-[11px] text-gray-600 truncate" title={user.id}>
-                    ID: <span className="font-mono text-gray-800">{user.id}</span>
+                  <p
+                    className="text-[11px] text-gray-600 truncate"
+                    title={user.id}
+                  >
+                    ID:{" "}
+                    <span className="font-mono text-gray-800">{user.id}</span>
                   </p>
                   <button
                     type="button"
@@ -136,14 +160,25 @@ export function ProfileMenu({ user, onLogout, triggerClassName }: ProfileMenuPro
               )}
 
               {isStaff && (
-                <Link
-                  href="/tickets"
-                  role="menuitem"
-                  onClick={() => setIsOpen(false)}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Tickets (Kitchen Queue)
-                </Link>
+                <>
+                  <Link
+                    href="/tickets"
+                    role="menuitem"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Tickets (Kitchen Queue)
+                  </Link>
+
+                  <Link
+                    href="/staff/menu"
+                    role="menuitem"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Menu Availability
+                  </Link>
+                </>
               )}
 
               {isDriver && (

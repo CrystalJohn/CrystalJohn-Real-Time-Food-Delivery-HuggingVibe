@@ -54,12 +54,13 @@ interface RegisterPayload {
 
 function mapAuthUser(user: AuthUserPayload): User {
   const hasDefaultAddress = Boolean(user.defaultAddress?.fullAddress);
+  const normalizedRole = (user.role ?? 'CUSTOMER').toUpperCase();
 
   return {
     id: user.id,
     email: user.email,
     name: user.fullName,
-    role: user.role as User['role'],
+    role: normalizedRole as User['role'],
     phone: user.phone,
     defaultAddress: hasDefaultAddress
       ? {

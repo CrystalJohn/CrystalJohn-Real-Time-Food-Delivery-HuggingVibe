@@ -16,7 +16,11 @@ import type { DeliveryJob } from '@/types';
 import { ETAOverlay, TrackingMap } from '@/features/tracking';
 import { haversineKm } from '@/features/tracking/eta';
 import { JobCard } from './JobCard';
-import { jobService, type DeliveryJobDetail } from './job.service';
+import {
+  getDeliveryConfirmationMessage,
+  jobService,
+  type DeliveryJobDetail,
+} from './job.service';
 import { useJobs } from './useJobs';
 
 const currencyFormatter = new Intl.NumberFormat('vi-VN');
@@ -134,35 +138,47 @@ export function JobList() {
     }
   };
 
-  const handleAction = async (job: DeliveryJob, action: 'pickup' | 'deliver') => {
-    setProcessing(job.id);
-    try {
+const handleAction = async (job: DeliveryJob, action: 'pickup' | 'deliver') => {
+  setProcessing(job.id);
+
+  try {
+    if (action === 'pickup') {
+      await jobService.pickupJob(job.orderId);
+
       try {
         await jobService.updateMyLocation(job.orderId);
       } catch {
-        // Ignore GPS failure, still allow status update.
+        // Pickup đã thành công thì GPS fail không được làm fail cả flow.
       }
 
-      if (action === 'pickup') {
-        await jobService.pickupJob(job.orderId);
-        toast.success(`Order #${job.orderId} marked as PICKED_UP`);
-      }
-      if (action === 'deliver') {
-        await jobService.deliverJob(job.orderId);
-        toast.success(`Order #${job.orderId} marked as DELIVERED`);
-      }
-
-      await refetch();
-      if (detailOpen) {
-        await loadOrderDetail(job.orderId);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      toast.error(`Failed to ${action}: ${message}`);
-    } finally {
-      setProcessing(null);
+      toast.success(`Order #${job.orderId} marked as PICKED_UP`);
     }
-  };
+
+    if (action === 'deliver') {
+      try {
+        await jobService.updateMyLocation(job.orderId);
+      } catch {
+        // Nếu GPS fail thì vẫn cho driver xác nhận giao.
+      }
+
+      const updated = await jobService.deliverJob(job.orderId);
+      toast.success(
+        `Order #${job.orderId}: ${getDeliveryConfirmationMessage(updated)}`,
+      );
+    }
+
+    await refetch();
+
+    if (detailOpen) {
+      await loadOrderDetail(job.orderId);
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    toast.error(`Failed to ${action}: ${message}`);
+  } finally {
+    setProcessing(null);
+  }
+};
 
   const distanceToDestinationKm = useMemo(() => {
     if (!detail?.driverLocation || !detail?.deliveryLocation) return null;
@@ -200,12 +216,28 @@ export function JobList() {
   };
 
   useEffect(() => {
-    if (!detailOpen || !detail || detail.status !== 'PICKED_UP' || detail.deliveredAt) return;
-    const intervalId = setInterval(() => {
-      void syncMyLocationForDetail(detail.orderId);
-    }, 15000);
-    return () => clearInterval(intervalId);
-  }, [detailOpen, detail?.orderId, detail?.status, detail?.deliveredAt]);
+  if (
+    !detailOpen ||
+    !detail ||
+    detail.status !== 'PICKED_UP' ||
+    detail.deliveredAt ||
+    detail.driverConfirmedDelivered
+  ) {
+    return;
+  }
+
+  const intervalId = setInterval(() => {
+    void syncMyLocationForDetail(detail.orderId);
+  }, 15000);
+
+  return () => clearInterval(intervalId);
+}, [
+  detailOpen,
+  detail?.orderId,
+  detail?.status,
+  detail?.deliveredAt,
+  detail?.driverConfirmedDelivered,
+]);
 
   if (loading) {
     return (
@@ -346,9 +378,14 @@ export function JobList() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Status</p>
-                  <Badge variant="outline">{detail.statusRaw}</Badge>
-                </div>
+  <p className="text-xs uppercase tracking-wide text-gray-500">Status</p>
+  <Badge variant="outline">{detail.statusRaw}</Badge>
+  {detail.driverConfirmedDelivered && !detail.customerConfirmedDelivered && (
+    <p className="mt-1 text-xs text-amber-600">
+      Driver already confirmed handoff. Waiting for customer confirmation.
+    </p>
+  )}
+</div>
                 <div>
                   <p className="text-xs uppercase tracking-wide text-gray-500">Total Amount</p>
                   <p className="font-semibold text-red-600">{currencyFormatter.format(detail.totalAmount)} VND</p>

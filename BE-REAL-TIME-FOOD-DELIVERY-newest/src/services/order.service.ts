@@ -25,6 +25,7 @@ import { OrderItemRepository } from 'src/repositories/order-item.repository';
 import { WalletRepository } from 'src/repositories/wallet.repository';
 import { WalletTransactionRepository } from 'src/repositories/wallet-transaction.repository';
 import { storeConfig } from 'src/config/store.config';
+import { TrackingGateway } from 'src/gateways/tracking.gateway';
 
 const CUSTOMER_CANCELLABLE_STATUSES: OrderStatus[] = [
   OrderStatus.PENDING,
@@ -50,6 +51,7 @@ export class OrderService {
     private readonly orderItemRepository: OrderItemRepository,
     private readonly walletRepository: WalletRepository,
     private readonly walletTransactionRepository: WalletTransactionRepository,
+    private readonly trackingGateway: TrackingGateway,
   ) {}
 
   async createOrder(userId: string, dto: CreateOrderDto) {
@@ -87,7 +89,10 @@ export class OrderService {
       );
 
       const orderItems = this.buildOrderItemsFromCart(cart, order);
-      order.items = await this.orderItemRepository.saveMany(orderItems, manager);
+      order.items = await this.orderItemRepository.saveMany(
+        orderItems,
+        manager,
+      );
 
       if (dto.paymentMethod === PaymentMethod.WALLET) {
         await this.payWithWallet(customer.userId, order, totalAmount, manager);
@@ -155,7 +160,7 @@ export class OrderService {
   }
 
   async cancelMyOrder(userId: string, orderId: string) {
-    return this.dataSource.transaction(async (manager) => {
+    const updatedOrder = await this.dataSource.transaction(async (manager) => {
       const customer = await this.getCustomerOrFail(userId, manager);
 
       const order = await this.orderRepository.findByIdAndCustomerIdForUpdate(
@@ -173,7 +178,7 @@ export class OrderService {
         if (!saved) {
           throw new NotFoundException('Order not found after cancel');
         }
-        return this.mapOrderResponse(saved);
+        return saved;
       }
 
       if (!CUSTOMER_CANCELLABLE_STATUSES.includes(order.status)) {
@@ -192,17 +197,21 @@ export class OrderService {
         await this.orderRepository.save(order, manager);
       }
 
-      const updatedOrder = await this.orderRepository.findById(order.id, manager);
-      if (!updatedOrder) {
+      const saved = await this.orderRepository.findById(order.id, manager);
+      if (!saved) {
         throw new NotFoundException('Order not found after cancel');
       }
 
-      return this.mapOrderResponse(updatedOrder);
+      return saved;
     });
+
+    this.emitTrackingStatus(updatedOrder);
+
+    return this.mapOrderResponse(updatedOrder);
   }
 
   async confirmDelivered(userId: string, orderId: string) {
-    return this.dataSource.transaction(async (manager) => {
+    const updatedOrder = await this.dataSource.transaction(async (manager) => {
       const customer = await this.getCustomerOrFail(userId, manager);
 
       const order = await this.orderRepository.findByIdAndCustomerIdForUpdate(
@@ -225,24 +234,38 @@ export class OrderService {
         if (order.driverConfirmedDelivered) {
           order.status = OrderStatus.DELIVERED;
           order.deliveredAt = new Date();
+
+          if (
+            order.paymentMethod === PaymentMethod.CASH &&
+            order.paymentStatus === PaymentStatus.UNPAID
+          ) {
+            order.paymentStatus = PaymentStatus.PAID;
+          }
         }
 
         await this.orderRepository.save(order, manager);
       }
 
-      const updatedOrder = await this.orderRepository.findById(order.id, manager);
-      if (!updatedOrder) {
+      const saved = await this.orderRepository.findById(order.id, manager);
+      if (!saved) {
         throw new NotFoundException(
           'Order not found after delivery confirmation',
         );
       }
 
-      return this.mapOrderResponse(updatedOrder);
+      return saved;
     });
+
+    this.emitTrackingStatus(updatedOrder);
+
+    return this.mapOrderResponse(updatedOrder);
   }
 
   private async getCustomerOrFail(userId: string, manager: EntityManager) {
-    const customer = await this.customerRepository.findByUserId(userId, manager);
+    const customer = await this.customerRepository.findByUserId(
+      userId,
+      manager,
+    );
 
     if (!customer) {
       throw new NotFoundException('Customer not found');
@@ -320,11 +343,15 @@ export class OrderService {
       const customText = dto.deliveryAddressText?.trim();
 
       if (!customText) {
-        throw new BadRequestException('deliveryAddressText is required for CUSTOM mode');
+        throw new BadRequestException(
+          'deliveryAddressText is required for CUSTOM mode',
+        );
       }
 
       if (dto.deliveryLat === undefined || dto.deliveryLng === undefined) {
-        throw new BadRequestException('deliveryLat and deliveryLng are required for CUSTOM mode');
+        throw new BadRequestException(
+          'deliveryLat and deliveryLng are required for CUSTOM mode',
+        );
       }
 
       return {
@@ -353,7 +380,9 @@ export class OrderService {
 
     if (distanceKm > storeConfig.deliveryRadiusKm) {
       throw new BadRequestException(
-        'Delivery address is outside delivery radius (' + storeConfig.deliveryRadiusKm + 'km).'
+        'Delivery address is outside delivery radius (' +
+          storeConfig.deliveryRadiusKm +
+          'km).',
       );
     }
   }
@@ -391,8 +420,7 @@ export class OrderService {
       orderItem.menuItemName = cartItem.menuItem.name;
       orderItem.menuItemDescription = cartItem.menuItem.description ?? null;
       orderItem.menuItemImageUrl = firstImage ? firstImage.imageUrl : null;
-      orderItem.menuItemCategoryName =
-        cartItem.menuItem.category?.name ?? null;
+      orderItem.menuItemCategoryName = cartItem.menuItem.category?.name ?? null;
       orderItem.quantity = cartItem.quantity;
       orderItem.price = cartItem.menuItem.price;
 
@@ -481,6 +509,21 @@ export class OrderService {
     order.status = OrderStatus.CANCELLED;
     order.paymentStatus = PaymentStatus.REFUNDED;
     await this.orderRepository.save(order, manager);
+  }
+
+  private emitTrackingStatus(order: Order | null) {
+    if (!order) {
+      return;
+    }
+
+    try {
+      this.trackingGateway.emitOrderStatusUpdated(
+        String(order.id),
+        this.mapTrackingResponse(order),
+      );
+    } catch {
+      void 0;
+    }
   }
 
   private mapTrackingResponse(order: Order | null) {
@@ -578,7 +621,3 @@ export class OrderService {
     };
   }
 }
-
-
-
-

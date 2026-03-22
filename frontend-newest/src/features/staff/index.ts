@@ -6,3 +6,4 @@ export { ticketService } from './ticket.service';
 export { staffService } from './staff.service';
 export { useStaffQueue } from './useStaffQueue';
 export { useStaffOrders } from './useStaffOrders';
+export { StaffMenuPanel } from './StaffMenuPanel';

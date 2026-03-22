@@ -1,15 +1,21 @@
 'use client';
 
-import { LandingHeader } from '@/components/layout/LandingHeader';
-import { LandingFooter } from '@/components/layout/LandingFooter';
+import { RolePanelShell } from '@/components/layout/RolePanelShell';
+import { GoogleMapsProvider } from '@/lib/GoogleMapsProvider';
 
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col min-h-screen">
-      <LandingHeader />
-      <main className="flex-1">{children}</main>
-      <LandingFooter />
-    </div>
+    <RolePanelShell
+      role="DRIVER"
+      homeHref="/jobs"
+      panelTitle="Driver Management"
+      navItems={[
+        { href: '/jobs', label: 'My Jobs' },
+      ]}
+    >
+      <GoogleMapsProvider>
+        {children}
+      </GoogleMapsProvider>
+    </RolePanelShell>
   );
 }
-

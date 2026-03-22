@@ -1,10 +1,14 @@
 // state + login/register/logout logic, exposed through context
-'use client';
+"use client";
 
-import { createContext, useState, useEffect, type ReactNode } from 'react';
-import type { User } from '@/types';
-import { authService, type LoginRequest, type RegisterRequest } from './auth.service';
-import { authStorage } from './auth.storage';
+import { createContext, useState, useEffect, type ReactNode } from "react";
+import type { User } from "@/types";
+import {
+  authService,
+  type LoginRequest,
+  type RegisterRequest,
+} from "./auth.service";
+import { authStorage } from "./auth.storage";
 
 interface AuthContextValue {
   user: User | null;
@@ -15,7 +19,9 @@ interface AuthContextValue {
   isAuthenticated: boolean;
 }
 
-export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+export const AuthContext = createContext<AuthContextValue | undefined>(
+  undefined,
+);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -44,7 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginRequest) => {
     const response = await authService.login(data);
     authStorage.setToken(response.token);
-    setUser(response.user);
+
+    const currentUser = await authService.me();
+    setUser(currentUser);
   };
 
   const register = async (data: RegisterRequest) => {

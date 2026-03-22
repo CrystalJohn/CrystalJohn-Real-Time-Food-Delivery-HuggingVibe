@@ -31,4 +31,8 @@ export interface Order {
   updatedAt?: string;
   confirmedAt?: string;
   deliveredAt?: string;
+
+  // thêm cho flow xác nhận giao hàng 2 phía
+  driverConfirmedDelivered?: boolean;
+  customerConfirmedDelivered?: boolean;
 }

@@ -9,6 +9,7 @@ import { RegisterForm } from '@/features/auth/RegisterForm';
 import { ROUTES } from '@/lib/constants';
 import { LandingHeader } from '@/components/layout/LandingHeader';
 import { LandingFooter } from '@/components/layout/LandingFooter';
+import { GoogleMapsProvider } from '@/lib/GoogleMapsProvider';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -72,7 +73,9 @@ export default function RegisterPage() {
                 </p>
               </div>
 
-              <RegisterForm />
+              <GoogleMapsProvider>
+                <RegisterForm />
+              </GoogleMapsProvider>
 
               <p className="text-center text-sm text-muted-foreground">
                 Already have an account?{' '}
