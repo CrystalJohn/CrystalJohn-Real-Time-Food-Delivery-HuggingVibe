@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Card, Spinner } from '@/components/ui';
-import { useAdminStats } from './useAdminStats';
+import { Card, Spinner } from "@/components/ui";
+import { useAdminStats } from "./useAdminStats";
 
 export function StatsCards() {
   const { stats, loading } = useAdminStats();
@@ -18,32 +18,32 @@ export function StatsCards() {
 
   const cards = [
     {
-      title: 'Total Orders',
+      title: "Total Orders",
       value: stats.totalOrders,
-      icon: '📦',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      icon: "📦",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
     },
     {
-      title: 'Active Orders',
+      title: "Active Orders",
       value: stats.activeOrders,
-      icon: '🔥',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
+      icon: "🔥",
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
     },
     {
-      title: 'Revenue Today',
-      value: `$${stats.totalRevenue.toFixed(2)}`,
-      icon: '💰',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      title: "Revenue Today",
+      value: `$${Number(stats.todayRevenue ?? 0).toFixed(2)}`,
+      icon: "💰",
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
-      title: 'Active Drivers',
+      title: "Active Drivers",
       value: stats.activeDrivers,
-      icon: '🚗',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      icon: "🚗",
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
     },
   ];
 

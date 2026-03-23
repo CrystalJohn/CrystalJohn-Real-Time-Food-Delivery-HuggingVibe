@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3001",
-    "build": "next build --webpack",
+    "dev": "next dev -p 3001",
+    "build": "next build",
     "start": "next start",
     "lint": "npm-run-all --parallel lint:eslint",
     "lint:eslint": "next lint",
@@ -24,6 +24,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-toastify": "^11.0.5",
+    "recharts": "^2.15.4",
     "sass": "^1.97.2",
     "socket.io-client": "^4.8.1"
   },
