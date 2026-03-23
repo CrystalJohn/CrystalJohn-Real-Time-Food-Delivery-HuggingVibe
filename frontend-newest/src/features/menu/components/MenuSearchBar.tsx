@@ -1,41 +1,52 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 
-export function MenuSearchBar() {
+type SearchParams = { [key: string]: string | string[] | undefined };
+
+function getSingleParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export function MenuSearchBar({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get('q') ?? '');
+  const [query, setQuery] = useState(getSingleParam(searchParams.q) ?? "");
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setQuery(searchParams.get('q') ?? '');
+    setQuery(getSingleParam(searchParams.q) ?? "");
   }, [searchParams]);
 
   useEffect(() => {
-    const currentQuery = searchParams.get('q') ?? '';
-    if (query === currentQuery) {
-      return;
-    }
+    const currentQuery = getSingleParam(searchParams.q) ?? "";
+    if (query === currentQuery) return;
 
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
     timeoutRef.current = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams();
 
-      if (query.trim()) {
-        params.set('q', query.trim());
-      } else {
-        params.delete('q');
+      // rebuild từ object searchParams (tránh useSearchParams() => lỗi build Next 16)
+      for (const [key, value] of Object.entries(searchParams)) {
+        if (value == null) continue;
+        if (Array.isArray(value)) {
+          for (const v of value) params.append(key, v);
+        } else {
+          params.set(key, value);
+        }
       }
 
-      // Reset paging when keyword changes.
-      params.delete('page');
+      if (query.trim()) params.set("q", query.trim());
+      else params.delete("q");
+
+      params.delete("page"); // đổi keyword thì reset page
 
       const nextQuery = params.toString();
       const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
@@ -43,9 +54,7 @@ export function MenuSearchBar() {
     }, 350);
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [pathname, query, router, searchParams]);
 

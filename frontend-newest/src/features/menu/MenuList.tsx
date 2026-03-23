@@ -53,8 +53,13 @@ export function MenuList({ onAddToCart }: MenuListProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {items.map((item) => (
-            <MenuItemCard key={item.id} item={item} onAddToCart={onAddToCart} />
+          {items.map((item, index) => (
+            <MenuItemCard
+              key={item.id}
+              item={item}
+              index={index}
+              onAddToCart={onAddToCart}
+            />
           ))}
         </div>
       )}

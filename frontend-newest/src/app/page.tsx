@@ -2,14 +2,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LandingHeader } from '@/components/layout/LandingHeader';
 import { LandingFooter } from '@/components/layout/LandingFooter';
 import { HeroSection } from '@/components/shared/HeroSection';
 import { ProductCard, type Product } from '@/components/shared/ProductCard';
 import { Button } from '@/components/ui/Button';
-import { MOCK_MENU_ITEMS, MOCK_PROMO_BANNERS } from '@/mocks';
+import { MOCK_PROMO_BANNERS } from '@/mocks';
 import { PRODUCT_TABS, PROMO_BANNER_STYLES } from '@/lib/constants';
+import { useMenu } from '@/features/menu/useMenu';
+import { ProductDetailModal } from '@/components/shared/ProductDetailModal';
 
 /**
  * Home Page - Landing Page
@@ -17,11 +19,13 @@ import { PRODUCT_TABS, PROMO_BANNER_STYLES } from '@/lib/constants';
  */
 export default function Home() {
   const [activeTab, setActiveTab] = useState<string>('must-try');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // TODO: replace with API call: GET /api/menu — map _id and imageUrl to component shape
-  const menuItems = Array.isArray(MOCK_MENU_ITEMS) ? MOCK_MENU_ITEMS : [];
-  const products: Product[] = menuItems.map((item, idx) => ({
-    id: item._id,
+  // Fetch from API instead of using mock data
+  const { items: menuItems, loading } = useMenu();
+
+  const products: Product[] = menuItems.slice(0, 8).map((item, idx) => ({
+    id: String(item.id),
     name: item.name,
     price: item.price,
     originalPrice: item.price * 1.2, // Mock original price for design display
@@ -29,6 +33,7 @@ export default function Home() {
     badge: idx === 0 ? 'SALE' : idx === 1 ? 'NEW' : idx === 2 ? 'HOT' : 'BEST SELLER',
     discount: idx === 0 ? 20 : undefined
   }));
+
   const tabs = Array.isArray(PRODUCT_TABS) ? PRODUCT_TABS : [];
   const banners = Array.isArray(MOCK_PROMO_BANNERS) ? MOCK_PROMO_BANNERS : [];
   const bannerStyles = Array.isArray(PROMO_BANNER_STYLES) ? PROMO_BANNER_STYLES : [];
@@ -76,6 +81,7 @@ export default function Home() {
                 key={product.id}
                 product={product}
                 onAddToCart={handleAddToCart}
+                onClick={(prod) => setSelectedProduct(prod)}
                 index={index}
               />
             ))}
@@ -147,6 +153,13 @@ export default function Home() {
 
       {/* Footer */}
       <LandingFooter />
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onAddToCart={handleAddToCart}
+      />
     </div>
   );
 }

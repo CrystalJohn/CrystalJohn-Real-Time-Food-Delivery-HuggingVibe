@@ -1,10 +1,29 @@
-﻿'use client';
+﻿"use client";
 
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-import { Filter, X } from 'lucide-react';
-import { menuService } from '@/features/menu/menu.service';
-import type { MenuItem } from '@/types';
+import { useRouter, usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { Filter, X } from "lucide-react";
+import { menuService } from "@/features/menu/menu.service";
+import type { MenuItem } from "@/types";
+
+type SearchParams = { [key: string]: string | string[] | undefined };
+
+function getSingleParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function toURLSearchParams(searchParams: SearchParams) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value == null) continue;
+    if (Array.isArray(value)) {
+      for (const v of value) params.append(key, v);
+    } else {
+      params.set(key, value);
+    }
+  }
+  return params;
+}
 
 interface CategoryOption {
   value: string;
@@ -12,13 +31,13 @@ interface CategoryOption {
 }
 
 const PRICE_RANGES = [
-  { label: '0 - 100.000 VND', value: '0-100000' },
-  { label: '100.000 - 200.000 VND', value: '100000-200000' },
-  { label: '200.000 - 500.000 VND', value: '200000-500000' },
-  { label: '500.000+ VND', value: '500000-999999999' },
+  { label: "0 - 100.000 VND", value: "0-100000" },
+  { label: "100.000 - 200.000 VND", value: "100000-200000" },
+  { label: "200.000 - 500.000 VND", value: "200000-500000" },
+  { label: "500.000+ VND", value: "500000-999999999" },
 ];
 
-const DIETARY = ['Vegetarian'];
+const DIETARY = ["Vegetarian"];
 
 function buildCategoryOptions(menuItems: MenuItem[]): CategoryOption[] {
   const counts = new Map<string, number>();
@@ -34,16 +53,19 @@ function buildCategoryOptions(menuItems: MenuItem[]): CategoryOption[] {
     .sort((a, b) => a.value.localeCompare(b.value));
 }
 
-export function SidebarFilter() {
+export function SidebarFilter({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
 
-  const currentCategory = searchParams.get('category');
-  const currentPrice = searchParams.get('price');
-  const currentDietary = searchParams.get('dietary');
+  const currentCategory = getSingleParam(searchParams.category);
+  const currentPrice = getSingleParam(searchParams.price);
+  const currentDietary = getSingleParam(searchParams.dietary);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,19 +73,14 @@ export function SidebarFilter() {
     async function loadCategories() {
       try {
         const items = await menuService.getAll();
-        if (!cancelled) {
-          setCategories(buildCategoryOptions(items));
-        }
+        if (!cancelled) setCategories(buildCategoryOptions(items));
       } catch (error) {
-        console.error('Failed to load menu categories:', error);
-        if (!cancelled) {
-          setCategories([]);
-        }
+        console.error("Failed to load menu categories:", error);
+        if (!cancelled) setCategories([]);
       }
     }
 
     void loadCategories();
-
     return () => {
       cancelled = true;
     };
@@ -71,20 +88,20 @@ export function SidebarFilter() {
 
   const createQueryString = useCallback(
     (name: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (params.get(name) === value) {
-        params.delete(name);
-      } else {
-        params.set(name, value);
-      }
-      params.delete('page');
+      const params = toURLSearchParams(searchParams);
+      if (params.get(name) === value) params.delete(name);
+      else params.set(name, value);
+
+      params.delete("page");
       return params.toString();
     },
     [searchParams],
   );
 
   const updateFilter = (name: string, value: string) => {
-    router.push(`${pathname}?${createQueryString(name, value)}`, { scroll: false });
+    router.push(`${pathname}?${createQueryString(name, value)}`, {
+      scroll: false,
+    });
   };
 
   const FilterContent = () => (
@@ -109,13 +126,13 @@ export function SidebarFilter() {
               <li
                 key={cat.value}
                 className="flex justify-between items-center group cursor-pointer"
-                onClick={() => updateFilter('category', cat.value)}
+                onClick={() => updateFilter("category", cat.value)}
               >
                 <button
                   className={`text-sm transition-colors ${
                     isActive
-                      ? 'font-bold text-red-600'
-                      : 'text-gray-600 group-hover:text-red-600'
+                      ? "font-bold text-red-600"
+                      : "text-gray-600 group-hover:text-red-600"
                   }`}
                 >
                   {cat.value}
@@ -123,8 +140,8 @@ export function SidebarFilter() {
                 <span
                   className={`text-xs px-2 py-0.5 rounded-full ${
                     isActive
-                      ? 'bg-red-100 text-red-600 font-bold'
-                      : 'bg-gray-100 text-gray-500'
+                      ? "bg-red-100 text-red-600 font-bold"
+                      : "bg-gray-100 text-gray-500"
                   }`}
                 >
                   {cat.count}
@@ -145,11 +162,11 @@ export function SidebarFilter() {
             return (
               <li key={price.value}>
                 <button
-                  onClick={() => updateFilter('price', price.value)}
+                  onClick={() => updateFilter("price", price.value)}
                   className={`text-sm transition-colors ${
                     isActive
-                      ? 'font-bold text-red-600'
-                      : 'text-gray-600 hover:text-red-600'
+                      ? "font-bold text-red-600"
+                      : "text-gray-600 hover:text-red-600"
                   }`}
                 >
                   {price.label}
@@ -171,11 +188,11 @@ export function SidebarFilter() {
             return (
               <li key={diet}>
                 <button
-                  onClick={() => updateFilter('dietary', rawValue)}
+                  onClick={() => updateFilter("dietary", rawValue)}
                   className={`text-sm transition-colors ${
                     isActive
-                      ? 'font-bold text-red-600'
-                      : 'text-gray-600 hover:text-red-600'
+                      ? "font-bold text-red-600"
+                      : "text-gray-600 hover:text-red-600"
                   }`}
                 >
                   {diet}

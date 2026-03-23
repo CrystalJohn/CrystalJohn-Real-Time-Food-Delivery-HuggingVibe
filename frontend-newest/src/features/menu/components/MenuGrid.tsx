@@ -1,8 +1,8 @@
-import { ProductCard, type Product } from './ProductCard';
-import { Pagination } from '@/features/menu/components/Pagination';
-import { SortSelect } from '@/features/menu/components/SortSelect';
-import { menuService } from '@/features/menu/menu.service';
-import type { MenuItem } from '@/types';
+import { ProductCard, type Product } from "./ProductCard";
+import { Pagination } from "@/features/menu/components/Pagination";
+import { SortSelect } from "@/features/menu/components/SortSelect";
+import { menuService } from "@/features/menu/menu.service";
+import type { MenuItem } from "@/types";
 
 interface MenuGridProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -24,7 +24,7 @@ type MenuCatalogItem = Product & {
 
 const PAGE_SIZE = 8;
 const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600';
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600";
 
 function getSingleParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -46,7 +46,7 @@ function parseMenuQueryParams(searchParams: {
 function applyPriceFilter(items: MenuCatalogItem[], priceRange?: string) {
   if (!priceRange) return items;
 
-  const [minText, maxText] = priceRange.split('-');
+  const [minText, maxText] = priceRange.split("-");
   const minPrice = Number(minText);
   const maxPrice = Number(maxText);
 
@@ -56,7 +56,6 @@ function applyPriceFilter(items: MenuCatalogItem[], priceRange?: string) {
     if (Number.isNaN(maxPrice)) {
       return item.price >= minPrice;
     }
-
     return item.price >= minPrice && item.price <= maxPrice;
   });
 }
@@ -65,20 +64,22 @@ function applySort(items: MenuCatalogItem[], sort?: string) {
   const sortedItems = [...items];
 
   switch (sort) {
-    case 'price_asc':
+    case "price_asc":
       sortedItems.sort((left, right) => left.price - right.price);
       break;
-    case 'price_desc':
+    case "price_desc":
       sortedItems.sort((left, right) => right.price - left.price);
       break;
-    case 'rating':
+    case "rating":
       sortedItems.sort((left, right) => right.rating - left.rating);
       break;
     default:
       sortedItems.sort((left, right) => {
-        const leftPopularScore = left.badge === 'POPULAR' ? 1 : 0;
-        const rightPopularScore = right.badge === 'POPULAR' ? 1 : 0;
-        return rightPopularScore - leftPopularScore || right.rating - left.rating;
+        const leftPopularScore = left.badge === "POPULAR" ? 1 : 0;
+        const rightPopularScore = right.badge === "POPULAR" ? 1 : 0;
+        return (
+          rightPopularScore - leftPopularScore || right.rating - left.rating
+        );
       });
       break;
   }
@@ -95,10 +96,10 @@ function toCatalogItem(item: MenuItem): MenuCatalogItem {
     name: item.name,
     price: item.price,
     rating: 4.5,
-    prepTime: '20-30 min',
+    prepTime: "20-30 min",
     image: item.imageUrl || FALLBACK_IMAGE,
-    description: item.description || '',
-    badge: item.available ? undefined : 'SOLD OUT',
+    description: item.description || "",
+    badge: item.available ? undefined : "SOLD OUT",
     category: item.category,
     dietary: [],
   };
@@ -118,7 +119,7 @@ export async function getFilteredMenuData(searchParams: {
       ? await menuService.getByCategory(query.category)
       : await menuService.getAll();
   } catch (error) {
-    console.error('Failed to fetch menu items:', error);
+    console.error("Failed to fetch menu items:", error);
 
     // Safe fallback so page does not break if category endpoint mismatches.
     if (query.category) {
@@ -142,7 +143,8 @@ export async function getFilteredMenuData(searchParams: {
 
   if (normalizedSearch) {
     filteredItems = filteredItems.filter((item) => {
-      const haystack = `${item.name} ${item.description} ${item.category}`.toLowerCase();
+      const haystack =
+        `${item.name} ${item.description} ${item.category}`.toLowerCase();
       return haystack.includes(normalizedSearch);
     });
   }
@@ -171,9 +173,11 @@ export async function MenuGrid({ searchParams }: MenuGridProps) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Menu items</h2>
-          <p className="text-sm text-gray-500 mt-1">Showing {totalItems} results</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Showing {totalItems} results
+          </p>
         </div>
-        <SortSelect />
+        <SortSelect searchParams={searchParams} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -183,7 +187,11 @@ export async function MenuGrid({ searchParams }: MenuGridProps) {
       </div>
 
       <div className="mt-12 flex justify-center pb-8">
-        <Pagination currentPage={currentPage} totalPages={totalPages} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          searchParams={searchParams}
+        />
       </div>
     </>
   );

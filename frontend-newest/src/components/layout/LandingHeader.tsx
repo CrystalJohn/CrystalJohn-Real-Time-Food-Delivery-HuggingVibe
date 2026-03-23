@@ -30,7 +30,6 @@ export function LandingHeader() {
     { href: '/promotions', label: 'Promotions' },
     { href: '/menu', label: 'Menu' },
     { href: '/store-locator', label: 'Store Locator' },
-    { href: '/tracking-order', label: 'Tracking Order' },
   ];
 
   const sidebarItems = items.map((item) => ({
@@ -110,7 +109,7 @@ export function LandingHeader() {
               className="relative flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
             >
               <ShoppingBag className="h-4 w-4" />
-              <span>Gio hang</span>
+              <span>Cart</span>
               {itemCount > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-red-600">
                   {itemCount}

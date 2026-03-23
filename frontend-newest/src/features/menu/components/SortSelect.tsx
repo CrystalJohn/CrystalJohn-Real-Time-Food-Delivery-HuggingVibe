@@ -1,38 +1,62 @@
-'use client';
+"use client";
 
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { useRouter, usePathname } from "next/navigation";
+import { useCallback } from "react";
 
-export function SortSelect() {
+type SearchParams = { [key: string]: string | string[] | undefined };
+
+function getSingleParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function toURLSearchParams(searchParams: SearchParams) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value == null) continue;
+    if (Array.isArray(value)) {
+      for (const v of value) params.append(key, v);
+    } else {
+      params.set(key, value);
+    }
+  }
+  return params;
+}
+
+export function SortSelect({ searchParams }: { searchParams: SearchParams }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const currentSort = getSingleParam(searchParams.sort) || "";
 
   const createQueryString = useCallback(
     (name: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (!value) {
-        params.delete(name);
-      } else {
-        params.set(name, value);
-      }
-      params.delete('page');
+      const params = toURLSearchParams(searchParams);
+      if (!value) params.delete(name);
+      else params.set(name, value);
+
+      params.delete("page");
       return params.toString();
     },
-    [searchParams]
+    [searchParams],
   );
 
   const handleSort = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    router.push(`${pathname}?${createQueryString('sort', e.target.value)}`, { scroll: false });
+    router.push(`${pathname}?${createQueryString("sort", e.target.value)}`, {
+      scroll: false,
+    });
   };
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="sort" className="text-sm text-gray-500 hidden sm:inline-block">Sort by:</label>
-      <select 
+      <label
+        htmlFor="sort"
+        className="text-sm text-gray-500 hidden sm:inline-block"
+      >
+        Sort by:
+      </label>
+      <select
         id="sort"
         onChange={handleSort}
-        value={searchParams.get('sort') || ''}
+        value={currentSort}
         className="bg-white border border-gray-200 text-gray-700 text-sm rounded-full focus:ring-red-500 focus:border-red-500 block px-4 py-2 pr-8 appearance-none outline-none cursor-pointer shadow-sm"
       >
         <option value="">Recommended</option>
