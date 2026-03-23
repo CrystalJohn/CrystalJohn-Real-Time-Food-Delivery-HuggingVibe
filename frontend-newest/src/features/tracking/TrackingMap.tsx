@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { DriverLocation } from '@/types';
 import { GoogleMap, Marker, Polyline } from '@react-google-maps/api';
-import { useGoogleMaps } from '@/lib/GoogleMapsProvider';
+import { GoogleMapsProvider, useGoogleMaps } from '@/lib/GoogleMapsProvider';
 
 interface TrackingMapProps {
   driverLocation?: DriverLocation;
@@ -11,7 +11,7 @@ interface TrackingMapProps {
   deliveryAddress: string;
 }
 
-export function TrackingMap({
+function TrackingMapContent({
   driverLocation,
   deliveryLocation,
   deliveryAddress,
@@ -37,6 +37,7 @@ export function TrackingMap({
 
     let cancelled = false;
     const service = new window.google.maps.DirectionsService();
+
     service.route(
       {
         origin: { lat: driverLocation.lat, lng: driverLocation.lng },
@@ -45,6 +46,7 @@ export function TrackingMap({
       },
       (result, status) => {
         if (cancelled) return;
+
         if (status === window.google.maps.DirectionsStatus.OK && result?.routes?.[0]?.overview_path) {
           const path = result.routes[0].overview_path.map((p) => ({
             lat: p.lat(),
@@ -56,6 +58,7 @@ export function TrackingMap({
         }
       },
     );
+
     return () => {
       cancelled = true;
     };
@@ -69,7 +72,7 @@ export function TrackingMap({
             <p className="font-medium">Missing Google Maps API key</p>
             <p className="text-sm mt-1">
               Set <code className="px-1 py-0.5 bg-white border rounded">NEXT_PUBLIC_MAP_API_KEY</code> in
-              <code className="px-1 py-0.5 bg-white border rounded ml-1">.env.local</code> (thư mục gốc app Next.js).
+              <code className="px-1 py-0.5 bg-white border rounded ml-1">.env.local</code>.
             </p>
           </div>
         </div>
@@ -100,6 +103,7 @@ export function TrackingMap({
               title={`Delivery: ${deliveryAddress}`}
             />
           )}
+
           {driverLocation && (
             <Marker
               position={{ lat: driverLocation.lat, lng: driverLocation.lng }}
@@ -107,6 +111,7 @@ export function TrackingMap({
               title="Driver"
             />
           )}
+
           {routePath && routePath.length > 0 && (
             <Polyline
               path={routePath}
@@ -120,5 +125,13 @@ export function TrackingMap({
         </GoogleMap>
       )}
     </div>
+  );
+}
+
+export function TrackingMap(props: TrackingMapProps) {
+  return (
+    <GoogleMapsProvider>
+      <TrackingMapContent {...props} />
+    </GoogleMapsProvider>
   );
 }

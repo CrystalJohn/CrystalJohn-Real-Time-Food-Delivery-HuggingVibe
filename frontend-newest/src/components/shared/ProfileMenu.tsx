@@ -93,46 +93,19 @@ export function ProfileMenu({
               <p className="text-xs text-gray-500">
                 Email: {user?.email || "-"}
               </p>
-              <p className="text-xs text-gray-500">
-                Phone: {user?.phone || "-"}
-              </p>
-              <div className="mt-2 rounded-lg bg-gray-50 px-2 py-2">
-                <p className="text-[11px] font-semibold text-gray-700">
-                  Default Address
+              {!isAdmin && (
+                <p className="text-xs text-gray-500">
+                  Phone: {user?.phone || "-"}
                 </p>
-                <p className="mt-1 text-[11px] leading-4 text-gray-600 break-words">
-                  {user?.defaultAddress?.fullAddress || "-"}
-                </p>
-                {user?.defaultAddress?.lat != null &&
-                  user?.defaultAddress?.lng != null && (
-                    <p className="mt-1 text-[11px] text-gray-500">
-                      Lat: {user.defaultAddress.lat.toFixed(6)} | Lng:{" "}
-                      {user.defaultAddress.lng.toFixed(6)}
-                    </p>
-                  )}
-              </div>
-              {user?.id && (
-                <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-2 py-1">
-                  <p
-                    className="text-[11px] text-gray-600 truncate"
-                    title={user.id}
-                  >
-                    ID:{" "}
-                    <span className="font-mono text-gray-800">{user.id}</span>
+              )}
+              {!isAdmin && (
+                <div className="mt-2 rounded-lg bg-gray-50 px-2 py-2">
+                  <p className="text-[11px] font-semibold text-gray-700">
+                    Default Address
                   </p>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(user.id);
-                      } catch {
-                        // ignore
-                      }
-                    }}
-                    className="text-[11px] font-semibold text-red-600 hover:text-red-700"
-                  >
-                    Copy
-                  </button>
+                  <p className="mt-1 text-[11px] leading-4 text-gray-600 break-words">
+                    {user?.defaultAddress?.fullAddress || "-"}
+                  </p>
                 </div>
               )}
             </div>
@@ -194,7 +167,7 @@ export function ProfileMenu({
 
               {isAdmin && (
                 <Link
-                  href="/dashboard"
+                  href="/admin"
                   role="menuitem"
                   onClick={() => setIsOpen(false)}
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"

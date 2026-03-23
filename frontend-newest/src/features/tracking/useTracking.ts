@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { API_URL } from '@/lib/api';
-import { io, type Socket } from 'socket.io-client';
+import { useEffect, useState } from "react";
+import { API_URL } from "@/lib/api";
+import { io, type Socket } from "socket.io-client";
 import {
   mergeTrackingData,
   normalizeTrackingData,
   trackingService,
   type TrackingData,
   type TrackingScope,
-} from './tracking.service';
+} from "./tracking.service";
 
 let socket: Socket | null = null;
 let socketUsers = 0;
 
 function getSocketBaseUrl(): string {
-  if (typeof window === 'undefined') {
-    return process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+  if (typeof window === "undefined") {
+    return process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3000";
   }
 
   const explicitWsUrl = process.env.NEXT_PUBLIC_WS_URL;
@@ -38,7 +38,7 @@ function getSocket(): Socket {
   }
 
   socket = io(`${getSocketBaseUrl()}/tracking`, {
-    transports: ['websocket', 'polling'],
+    transports: ["websocket", "polling"],
     autoConnect: true,
     reconnection: true,
     reconnectionAttempts: Infinity,
@@ -55,7 +55,7 @@ interface UseTrackingOptions {
 
 export function useTracking(orderId: string, options?: UseTrackingOptions) {
   const enabled = options?.enabled ?? Boolean(orderId);
-  const scope = options?.scope ?? 'customer';
+  const scope = options?.scope ?? "customer";
 
   const [tracking, setTracking] = useState<TrackingData | null>(null);
   const [connected, setConnected] = useState(false);
@@ -87,7 +87,9 @@ export function useTracking(orderId: string, options?: UseTrackingOptions) {
         }
       } catch (err) {
         if (!disposed) {
-          setError(err instanceof Error ? err.message : 'Failed to load tracking');
+          setError(
+            err instanceof Error ? err.message : "Failed to load tracking",
+          );
         }
       } finally {
         if (!disposed) {
@@ -97,7 +99,7 @@ export function useTracking(orderId: string, options?: UseTrackingOptions) {
     };
 
     const joinRoom = () => {
-      client.emit('tracking.join-order', { orderId });
+      client.emit("tracking.join-order", { orderId });
     };
 
     const handleConnect = () => {
@@ -125,11 +127,11 @@ export function useTracking(orderId: string, options?: UseTrackingOptions) {
 
     void hydrateTracking();
 
-    client.on('connect', handleConnect);
-    client.on('disconnect', handleDisconnect);
-    client.on('order.location.updated', handleTrackingUpdate);
-    client.on('order.status.updated', handleTrackingUpdate);
-    client.on('order.tracking.updated', handleTrackingUpdate);
+    client.on("connect", handleConnect);
+    client.on("disconnect", handleDisconnect);
+    client.on("order.location.updated", handleTrackingUpdate);
+    client.on("order.status.updated", handleTrackingUpdate);
+    client.on("order.tracking.updated", handleTrackingUpdate);
 
     if (client.connected) {
       handleConnect();
@@ -141,16 +143,16 @@ export function useTracking(orderId: string, options?: UseTrackingOptions) {
       disposed = true;
 
       try {
-        client.emit('tracking.leave-order', { orderId });
+        client.emit("tracking.leave-order", { orderId });
       } catch {
         void 0;
       }
 
-      client.off('connect', handleConnect);
-      client.off('disconnect', handleDisconnect);
-      client.off('order.location.updated', handleTrackingUpdate);
-      client.off('order.status.updated', handleTrackingUpdate);
-      client.off('order.tracking.updated', handleTrackingUpdate);
+      client.off("connect", handleConnect);
+      client.off("disconnect", handleDisconnect);
+      client.off("order.location.updated", handleTrackingUpdate);
+      client.off("order.status.updated", handleTrackingUpdate);
+      client.off("order.tracking.updated", handleTrackingUpdate);
 
       socketUsers -= 1;
 

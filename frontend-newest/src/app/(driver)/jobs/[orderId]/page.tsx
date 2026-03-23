@@ -101,7 +101,7 @@ export default function DriverJobDetailPage() {
 
       toast.success('Order marked as PICKED_UP.');
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Không thể cập nhật trạng thái đơn.');
+      alert(e instanceof Error ? e.message : 'Cannot update order status.');
     } finally {
       setProcessing(false);
     }
@@ -115,7 +115,7 @@ export default function DriverJobDetailPage() {
         await jobService.updateMyLocation(orderId);
         await refetch();
       } catch {
-        // GPS fail không chặn bước driver xác nhận đã giao
+        // GPS fail does not block the driver from confirming delivery
       }
 
       const updated = await jobService.deliverJob(orderId);
@@ -123,7 +123,7 @@ export default function DriverJobDetailPage() {
 
       toast.success(getDeliveryConfirmationMessage(updated));
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Không thể cập nhật trạng thái đơn.');
+      alert(e instanceof Error ? e.message : 'Cannot update order status.');
     } finally {
       setProcessing(false);
     }
@@ -190,7 +190,7 @@ export default function DriverJobDetailPage() {
           <div>
             <p className="font-semibold">Delivery map</p>
             <p className="text-sm text-gray-600">
-              Vị trí điểm giao (customer) + vị trí tài xế (nếu đã gửi).
+              Delivery location (customer) & driver location (if tracked).
             </p>
           </div>
 
@@ -229,7 +229,7 @@ export default function DriverJobDetailPage() {
                 });
 
                 if (!destinationUrl) {
-                  alert('Chưa có tọa độ điểm giao (customer chưa cấp quyền Location).');
+                  alert('No delivery coordinates available (customer denied Location permissions).');
                   return;
                 }
 
@@ -274,41 +274,41 @@ export default function DriverJobDetailPage() {
               }}
               className="absolute bottom-3 right-3 z-10 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              Chỉ đường (Google Maps)
+              Directions (Google Maps)
             </button>
           </div>
 
           {job.deliveryAddress ? (
-            <p className="text-xs text-gray-500">Điểm giao: {job.deliveryAddress}</p>
+            <p className="text-xs text-gray-500">Delivery Location: {job.deliveryAddress}</p>
           ) : !job.deliveryLocation ? (
-            <p className="text-xs text-gray-500">Chưa có địa chỉ giao hàng.</p>
+            <p className="text-xs text-gray-500">No delivery address provided.</p>
           ) : null}
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div>
               {job.customerName && (
                 <p className="text-sm text-gray-600">
-                  Khách hàng: {job.customerName}
+                  Customer: {job.customerName}
                   {job.customerPhone ? ` • ${job.customerPhone}` : ''}
                 </p>
               )}
 
               <p className="mt-0.5 text-sm text-gray-500">
-                Trạng thái:{' '}
+                Status:{' '}
                 {job.status === 'ASSIGNED'
-                  ? 'Được gán'
+                  ? 'ASSIGNED'
                   : job.status === 'PICKED_UP'
-                    ? 'Đang giao'
+                    ? 'PICKED_UP'
                     : job.status === 'DELIVERED'
-                      ? 'Hoàn thành'
+                      ? 'DELIVERED'
                       : job.status === 'CANCELLED'
-                        ? 'Đã hủy'
+                        ? 'CANCELLED'
                         : job.status}
               </p>
 
               {job.driverConfirmedDelivered && !job.customerConfirmedDelivered && (
                 <p className="mt-1 text-xs text-amber-600">
-                  Driver đã xác nhận giao tận tay. Hệ thống đang chờ customer xác nhận.
+                  The driver has confirmed delivery. The system is awaiting customer confirmation.
                 </p>
               )}
             </div>
@@ -320,7 +320,7 @@ export default function DriverJobDetailPage() {
                   disabled={processing}
                   className="rounded bg-orange-600 px-4 py-2 font-medium text-white hover:bg-orange-700 disabled:opacity-50"
                 >
-                  Đã lấy hàng
+                  Received
                 </button>
               )}
 
@@ -330,7 +330,7 @@ export default function DriverJobDetailPage() {
                   disabled={processing}
                   className="rounded bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
                 >
-                  Xác nhận đã giao cho khách
+                  Confirm Delivery
                 </button>
               )}
             </div>
