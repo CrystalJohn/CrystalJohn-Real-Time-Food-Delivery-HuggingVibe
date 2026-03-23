@@ -114,11 +114,12 @@ export function ProductCard({ product, onAddToCart, onClick, index = 0 }: Produc
             )}
           </div>
 
-          <AddToCartButton
+            {/* Nút (+) */}
+          {/* <AddToCartButton
             productId={product.id}
             name={product.name}
             price={product.price}
-          />
+          /> */}
         </div>
       </div>
 
