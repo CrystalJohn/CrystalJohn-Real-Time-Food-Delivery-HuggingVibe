@@ -45,6 +45,20 @@ export function useDriverManagement() {
     }
   }, []);
 
+  const suspendDriver = useCallback(async (userId: string) => {
+    try {
+      const updatedDriver = await driverAdminService.suspendDriver(userId);
+      setDrivers((previous) =>
+        previous.map((d) =>
+          d.userId === userId ? { ...d, status: 'SUSPENDED', isActive: false } : d
+        )
+      );
+      return updatedDriver;
+    } catch (error) {
+      throw error;
+    }
+  }, []);
+
   useEffect(() => {
     void loadDrivers();
   }, [loadDrivers]);
@@ -56,5 +70,6 @@ export function useDriverManagement() {
     error,
     refetch: loadDrivers,
     createDriver,
+    suspendDriver,
   };
 }

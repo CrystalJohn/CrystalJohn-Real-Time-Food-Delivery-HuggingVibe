@@ -118,7 +118,7 @@ export function CategoryManagementPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-6">
+    <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <h2 className="text-4xl font-bold leading-tight text-slate-800">
@@ -158,7 +158,7 @@ export function CategoryManagementPage() {
       ) : (
         <div className="mt-4 overflow-hidden rounded-2xl border border-[#d8dbe2] bg-white shadow-sm">
           <div className="max-h-[56vh] overflow-auto">
-            <table className="min-w-[1020px] w-full text-left text-sm">
+            <table className="w-full text-left text-sm">
               <caption className="sr-only">List of menu categories</caption>
               <thead className="sticky top-0 z-10 bg-[#f6f7f9] text-xs uppercase tracking-wide text-slate-500">
                 <tr>

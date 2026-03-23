@@ -15,6 +15,13 @@ $foreground-dark: #ededed;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --primary: #{$primary-color};
   --primary-hover: #{$primary-hover};
+  
+  /* Standard shadcn/ui chart blue theme colors */
+  --chart-1: 221.2 83.2% 53.3%;
+  --chart-2: 212 95% 68%;
+  --chart-3: 216 92% 60%;
+  --chart-4: 210 98% 78%;
+  --chart-5: 212 97% 87%;
 }
 
 @media (prefers-color-scheme: dark) {

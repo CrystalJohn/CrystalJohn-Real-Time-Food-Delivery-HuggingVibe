@@ -79,7 +79,16 @@ function getNameInitial(value: string): string {
 }
 
 function getStatusInfo(driver: DriverAccount): { label: string; className: string } {
-  if (driver.isActive === false || driver.status?.toUpperCase() === 'INACTIVE') {
+  const statusUpper = driver.status?.toUpperCase();
+
+  if (statusUpper === 'SUSPENDED') {
+    return {
+      label: 'SUSPENDED',
+      className: 'bg-red-100 text-red-700 font-bold',
+    };
+  }
+
+  if (driver.isActive === false || statusUpper === 'INACTIVE') {
     return {
       label: 'Inactive',
       className: 'bg-slate-200 text-slate-600',
@@ -113,7 +122,7 @@ function containsSearchTerm(driver: DriverAccount, searchTerm: string): boolean 
 }
 
 export function DriverManagementPage() {
-  const { drivers, loading, creating, error, createDriver, refetch } = useDriverManagement();
+  const { drivers, loading, creating, error, createDriver, suspendDriver, refetch } = useDriverManagement();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -151,7 +160,23 @@ export function DriverManagementPage() {
   };
 
   const handleUnavailableAction = () => {
-    toast.info('Update/delete driver APIs are not ready. Currently only supporting Read and Create.');
+    toast.info('API is not ready. Currently only supporting Read, Create, and Suspend.');
+  };
+
+  const handleSuspendDriver = async (driver: DriverAccount) => {
+    if (!driver.userId) {
+      toast.error('Driver ID missing.');
+      return;
+    }
+    if (!confirm(`Are you sure you want to suspend driver ${driver.fullName || driver.email}?`)) {
+      return;
+    }
+    try {
+      await suspendDriver(driver.userId);
+      toast.success('Successfully suspended driver.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to suspend driver.');
+    }
   };
 
   const validateForm = (): boolean => {
@@ -386,7 +411,7 @@ export function DriverManagementPage() {
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={handleUnavailableAction}
+                                    onClick={() => handleSuspendDriver(driver)}
                                     className="rounded-md p-1.5 text-red-500 transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
                                     aria-label={`Ban ${driver.fullName || driver.email}`}
                                   >
@@ -406,9 +431,6 @@ export function DriverManagementPage() {
         <DialogContent className="sm:max-w-[600px] border-[#d9dce3] bg-white text-slate-800 shadow-2xl">
           <DialogHeader>
             <DialogTitle>Add New Driver</DialogTitle>
-            <DialogDescription className="text-slate-500">
-              Create a new driver account using the POST /admin/drivers endpoint.
-            </DialogDescription>
           </DialogHeader>
 
           <form className="space-y-4" onSubmit={handleCreateDriver}>

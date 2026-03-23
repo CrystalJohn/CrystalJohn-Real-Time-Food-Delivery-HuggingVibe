@@ -127,4 +127,12 @@ export const driverAdminService = {
     const payload = await api.post<unknown>('/admin/drivers', data);
     return normalizeDriver(payload);
   },
+
+  async suspendDriver(userId: string): Promise<DriverAccount> {
+    const payload = await api.patch<unknown>(`/admin/drivers/${userId}`, {
+      status: 'SUSPENDED',
+      isActive: false,
+    });
+    return normalizeDriver(payload);
+  },
 };

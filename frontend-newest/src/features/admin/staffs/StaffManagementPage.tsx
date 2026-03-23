@@ -384,9 +384,6 @@ export function StaffManagementPage() {
         <DialogContent className="sm:max-w-[560px] border-[#d9dce3] bg-white text-slate-800 shadow-2xl">
           <DialogHeader>
             <DialogTitle>Add New Staff</DialogTitle>
-            <DialogDescription className="text-slate-500">
-              Create a new staff account using the POST /admin/staffs endpoint.
-            </DialogDescription>
           </DialogHeader>
 
           <form className="space-y-4" onSubmit={handleCreateStaff}>

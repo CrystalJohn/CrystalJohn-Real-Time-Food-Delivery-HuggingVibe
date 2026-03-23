@@ -6,6 +6,7 @@ import { adminService } from '../admin/admin.service';
 
 export function useAdminStats() {
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,8 +14,12 @@ export function useAdminStats() {
     setLoading(true);
     setError(null);
     try {
-      const data = await adminService.getStats();
-      setStats(data);
+      const [statsData, ordersData] = await Promise.all([
+        adminService.getStats(),
+        adminService.getRecentOrders(10)
+      ]);
+      setStats(statsData);
+      setRecentOrders(ordersData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load stats');
     } finally {
@@ -30,5 +35,5 @@ export function useAdminStats() {
     return () => clearInterval(interval);
   }, []);
 
-  return { stats, loading, error, refetch: loadStats };
+  return { stats, recentOrders, loading, error, refetch: loadStats };
 }
