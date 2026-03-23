@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LandingHeader } from '@/components/layout/LandingHeader';
 import { LandingFooter } from '@/components/layout/LandingFooter';
-import { GoogleMapsProvider } from '@/lib/GoogleMapsProvider';
 import { useAuth } from '@/features/auth';
 import { ROUTES } from '@/lib/constants';
 
@@ -32,11 +31,7 @@ export default function CustomerLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <LandingHeader />
-      <main className="flex-1">
-        <GoogleMapsProvider>
-          {children}
-        </GoogleMapsProvider>
-      </main>
+      <main className="flex-1">{children}</main>
       <LandingFooter />
     </div>
   );
