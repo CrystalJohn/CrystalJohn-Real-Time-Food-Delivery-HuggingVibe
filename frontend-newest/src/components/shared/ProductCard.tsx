@@ -1,10 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { AddToCartButton } from '@/features/menu/components/AddToCartButton';
 
 /**
  * Product Interface
@@ -30,6 +29,8 @@ interface ProductCardProps {
   index?: number;
 }
 
+/** @deprecated Use AddToCartButton directly; onAddToCart kept for back-compat */
+
 const currencyFormatter = new Intl.NumberFormat('vi-VN');
 
 function formatVnd(amount: number) {
@@ -51,6 +52,7 @@ export function ProductCard({ product, onAddToCart, onClick, index = 0 }: Produc
     SALE: { className: 'bg-green-600 text-white', label: `-${product.discount}%` },
   };
 
+  // Legacy callback — still called if parent provides onAddToCart
   const handleAddToCart = () => {
     onAddToCart?.(product);
   };
@@ -112,29 +114,11 @@ export function ProductCard({ product, onAddToCart, onClick, index = 0 }: Produc
             )}
           </div>
 
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart();
-            }}
-            className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors z-10"
-          >
-            <Plus className="w-5 h-5" />
-          </motion.button>
-        </div>
-
-        <div className="pt-2">
-          <Button
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart();
-            }}
-            className="w-full rounded-full border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors py-2 h-auto text-sm font-semibold z-10"
-          >
-            Them vao gio
-          </Button>
+          <AddToCartButton
+            productId={product.id}
+            name={product.name}
+            price={product.price}
+          />
         </div>
       </div>
 

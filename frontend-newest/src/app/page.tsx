@@ -38,11 +38,7 @@ export default function Home() {
   const banners = Array.isArray(MOCK_PROMO_BANNERS) ? MOCK_PROMO_BANNERS : [];
   const bannerStyles = Array.isArray(PROMO_BANNER_STYLES) ? PROMO_BANNER_STYLES : [];
 
-  // Handle add to cart
-  const handleAddToCart = (product: Product) => {
-    console.log('Added to cart:', product);
-    // TODO: Implement cart functionality
-  };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -80,7 +76,6 @@ export default function Home() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onAddToCart={handleAddToCart}
                 onClick={(prod) => setSelectedProduct(prod)}
                 index={index}
               />
@@ -158,7 +153,6 @@ export default function Home() {
       <ProductDetailModal
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
-        onAddToCart={handleAddToCart}
       />
     </div>
   );

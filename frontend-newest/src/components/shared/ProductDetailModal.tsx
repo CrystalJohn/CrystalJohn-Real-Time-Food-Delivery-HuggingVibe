@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { X, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { menuService } from '@/features/menu/menu.service';
 import { Product, MORPH_TRANSITION } from './ProductCard';
+import { AddToCartButton } from '@/features/menu/components/AddToCartButton';
 
 interface ProductDetailModalProps {
   product: Product | null;
   onClose: () => void;
-  onAddToCart: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
 }
 
 const currencyFormatter = new Intl.NumberFormat('vi-VN');
@@ -109,16 +109,12 @@ export function ProductDetailModal({ product, onClose, onAddToCart }: ProductDet
               </div>
 
               <div className="mt-8 pt-6 border-t border-gray-100">
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    onAddToCart(product);
-                    onClose();
-                  }}
-                  className="w-full rounded-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 text-lg hover:shadow-lg transition-all"
-                >
-                  Them vao gio
-                </Button>
+                <AddToCartButton
+                  productId={product.id}
+                  name={product.name}
+                  price={product.price}
+                  variant="full"
+                />
               </div>
             </div>
           </motion.div>

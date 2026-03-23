@@ -12,9 +12,11 @@ interface AddToCartButtonProps {
   productId: string;
   name: string;
   price: number;
+  /** 'icon' = small circle +, 'full' = full-width CTA */
+  variant?: 'icon' | 'full';
 }
 
-export function AddToCartButton({ productId, name, price }: AddToCartButtonProps) {
+export function AddToCartButton({ productId, name, price, variant = 'icon' }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
   const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -77,15 +79,23 @@ export function AddToCartButton({ productId, name, price }: AddToCartButtonProps
 
   return (
     <>
-      <button
-        onClick={(e) => {
-          void handleAdd(e);
-        }}
-        className="w-8 h-8 rounded-full border border-gray-200 text-gray-500 bg-gray-50 flex flex-shrink-0 items-center justify-center hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-sm"
-        aria-label="Add to cart"
-      >
-        <Plus className="w-4 h-4" />
-      </button>
+      {variant === 'full' ? (
+        <button
+          onClick={(e) => { void handleAdd(e); }}
+          className="w-full rounded-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 text-lg hover:shadow-lg transition-all"
+          aria-label={`Add ${name} to cart`}
+        >
+          Add to cart
+        </button>
+      ) : (
+        <button
+          onClick={(e) => { void handleAdd(e); }}
+          className="w-8 h-8 rounded-full border border-gray-200 text-gray-500 bg-gray-50 flex flex-shrink-0 items-center justify-center hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-sm"
+          aria-label="Add to cart"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      )}
 
       <AuthRequiredPopup open={showAuthPopup} onClose={() => setShowAuthPopup(false)} />
     </>
