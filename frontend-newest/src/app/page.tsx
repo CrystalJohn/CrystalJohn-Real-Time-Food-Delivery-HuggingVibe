@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LandingHeader } from '@/components/layout/LandingHeader';
@@ -8,8 +8,7 @@ import { LandingFooter } from '@/components/layout/LandingFooter';
 import { HeroSection } from '@/components/shared/HeroSection';
 import { ProductCard, type Product } from '@/components/shared/ProductCard';
 import { Button } from '@/components/ui/Button';
-import { MOCK_PROMO_BANNERS } from '@/mocks';
-import { PRODUCT_TABS, PROMO_BANNER_STYLES } from '@/lib/constants';
+import { PRODUCT_TABS, PROMO_BANNER_STYLES, PROMO_BANNERS } from '@/lib/constants';
 import { useMenu } from '@/features/menu/useMenu';
 import { ProductDetailModal } from '@/components/shared/ProductDetailModal';
 
@@ -21,24 +20,48 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<string>('must-try');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Fetch from API instead of using mock data
+  // Fetch from API
   const { items: menuItems, loading } = useMenu();
 
-  const products: Product[] = menuItems.slice(0, 8).map((item, idx) => ({
-    id: String(item.id),
-    name: item.name,
-    price: item.price,
-    originalPrice: item.price * 1.2, // Mock original price for design display
-    image: item.imageUrl ?? '',
-    badge: idx === 0 ? 'SALE' : idx === 1 ? 'NEW' : idx === 2 ? 'HOT' : 'BEST SELLER',
-    discount: idx === 0 ? 20 : undefined
-  }));
+  // Map API items to Product shape
+  const allProducts: Product[] = useMemo(
+    () =>
+      menuItems.map((item, idx) => ({
+        id: String(item.id),
+        name: item.name,
+        price: item.price,
+        originalPrice: item.price * 1.2,
+        image: item.imageUrl ?? '',
+        badge: idx % 4 === 0 ? 'SALE' : idx % 4 === 1 ? 'NEW' : idx % 4 === 2 ? 'HOT' : 'BEST SELLER',
+        discount: idx % 4 === 0 ? 20 : undefined,
+      })),
+    [menuItems]
+  );
+
+  // Tab-based filtering — each tab shows a different subset of real data
+  const filteredProducts: Product[] = useMemo(() => {
+    if (!allProducts.length) return [];
+
+    switch (activeTab) {
+      case 'promotions':
+        // Cheapest items (best deals)
+        return [...allProducts].sort((a, b) => a.price - b.price).slice(0, 8);
+      case 'best-sellers':
+        // Highest priced = most popular (heuristic)
+        return [...allProducts].sort((a, b) => b.price - a.price).slice(0, 8);
+      case 'new':
+        // Latest items = highest ID
+        return [...allProducts].reverse().slice(0, 8);
+      case 'must-try':
+      default:
+        // First 8 items
+        return allProducts.slice(0, 8);
+    }
+  }, [allProducts, activeTab]);
 
   const tabs = Array.isArray(PRODUCT_TABS) ? PRODUCT_TABS : [];
-  const banners = Array.isArray(MOCK_PROMO_BANNERS) ? MOCK_PROMO_BANNERS : [];
+  const banners = Array.isArray(PROMO_BANNERS) ? PROMO_BANNERS : [];
   const bannerStyles = Array.isArray(PROMO_BANNER_STYLES) ? PROMO_BANNER_STYLES : [];
-
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,9 +95,9 @@ export default function Home() {
 
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product, index) => (
+            {filteredProducts.map((product, index) => (
               <ProductCard
-                key={product.id}
+                key={`${activeTab}-${product.id}`}
                 product={product}
                 onClick={(prod) => setSelectedProduct(prod)}
                 index={index}

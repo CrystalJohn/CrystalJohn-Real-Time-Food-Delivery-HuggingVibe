@@ -84,3 +84,58 @@ export const HERO_SLIDE_COLORS = [
   'from-yellow-400 to-orange-500',
   'from-red-500 to-red-600',
 ] as const;
+
+// ---------------------------------------------------------------------------
+// Static Banner / Slide Data (moved from /mocks — no backend endpoint)
+// ---------------------------------------------------------------------------
+
+/** Hero carousel slides on the homepage */
+export const HERO_SLIDES = [
+  {
+    id: 'slide-001',
+    title: 'BIG DEAL',
+    subtitle: '50% OFF',
+    description: 'Crispy Chicken Bucket Family Feast',
+    imageUrl: '/1.png',
+    ctaText: 'Order Now',
+    ctaLink: '/menu',
+  },
+  {
+    id: 'slide-002',
+    title: 'WEEKEND SPECIAL',
+    subtitle: 'BUY 1 GET 1',
+    description: 'Delicious Burgers & Crispy Fries',
+    imageUrl: '/2.png',
+    ctaText: 'Get Offer',
+    ctaLink: '/menu',
+  },
+  {
+    id: 'slide-003',
+    title: 'FAMILY FEAST',
+    subtitle: 'PIZZA & MORE',
+    description: 'Pizza, Burger, Chicken & Drinks Combo',
+    imageUrl: '/3.png',
+    ctaText: 'Try Now',
+    ctaLink: '/menu',
+  },
+];
+
+/** Promotional banners displayed at the bottom of the homepage */
+export const PROMO_BANNERS = [
+  {
+    id: 'promo-001',
+    label: 'Weekend Special',
+    title: 'BUY 1 GET 1\nFREE',
+    imageUrl: '/Image-menu.png',
+    ctaText: 'Get Code',
+    ctaLink: '/promotions',
+  },
+  {
+    id: 'promo-002',
+    label: 'New Customers',
+    title: 'FREE SHIPPING\nFIRST ORDER',
+    imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2070',
+    ctaText: 'Order Now',
+    ctaLink: '/register',
+  },
+];

@@ -4,18 +4,16 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, MapPin, Search, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
-import { MOCK_HERO_SLIDES } from '@/mocks';
+import { HERO_SLIDES } from '@/lib/constants';
 
 /**
  * HeroSection Component
  * Auto-rotating promotional banner with manual navigation
- * Data source: MOCK_HERO_SLIDES → replace with API call: GET /api/promotions/banners
  */
 export function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // TODO: replace with API call GET /api/promotions/banners
-  const slides = MOCK_HERO_SLIDES ?? [];
+  const slides = HERO_SLIDES ?? [];
   const slideCount = slides.length;
   const safeIndex = slideCount > 0 ? Math.min(currentSlide, slideCount - 1) : 0;
 
