@@ -1,27 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ComponentType, type FormEvent } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState, type FormEvent } from 'react';
 import {
   Ban,
-  BarChart3,
-  Bell,
-  Bike,
-  ChevronDown,
-  ChevronLeft,
-  ClipboardList,
   Eye,
-  LayoutDashboard,
   Pencil,
   Plus,
   Search,
-  Settings,
-  Users,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { ApiError } from '@/lib/api';
-import { useAuth } from '@/features/auth';
 import {
   Button,
   Dialog,
@@ -36,13 +24,6 @@ import {
 import { useStaffManagement } from './useStaffManagement';
 import type { CreateStaffRequest, StaffAccount } from './staff.service';
 
-interface SidebarItem {
-  label: string;
-  href?: string;
-  icon: ComponentType<{ className?: string }>;
-  active?: boolean;
-}
-
 interface CreateStaffFormState {
   email: string;
   fullName: string;
@@ -56,15 +37,6 @@ interface CreateStaffFieldErrors {
   phone?: string;
   password?: string;
 }
-
-const SIDEBAR_ITEMS: SidebarItem[] = [
-  { label: 'Tổng quan', icon: LayoutDashboard },
-  { label: 'Quản lý nhân viên', href: '/admin/staffs', icon: Users, active: true },
-  { label: 'Quản lý tài xế', href: '/admin/drivers', icon: Bike },
-  { label: 'Quản lý thực đơn', icon: ClipboardList },
-  { label: 'Báo cáo', icon: BarChart3 },
-  { label: 'Cài đặt', icon: Settings },
-];
 
 const INITIAL_FORM_STATE: CreateStaffFormState = {
   email: '',
@@ -86,7 +58,7 @@ function mapCreateStaffErrors(error: ApiError): CreateStaffFieldErrors {
   };
 
   if (error.statusCode === 409 && !fieldErrors.email) {
-    fieldErrors.email = 'Email đã tồn tại trong hệ thống.';
+    fieldErrors.email = 'Email already exists in the system.';
   }
 
   return fieldErrors;
@@ -105,28 +77,28 @@ function formatDate(value: string): string {
 }
 
 function mapRoleLabel(role: string): string {
-  if (role === 'ADMIN') return 'Quản lý';
-  if (role === 'STAFF') return 'Nhân viên';
+  if (role === 'ADMIN') return 'Admin';
+  if (role === 'STAFF') return 'Staff';
   return role;
 }
 
 function getStatusInfo(staff: StaffAccount): { label: string; className: string } {
   if (!staff.userIsActive) {
     return {
-      label: 'Tạm khóa',
+      label: 'Locked',
       className: 'bg-red-100 text-red-600',
     };
   }
 
   if (!staff.isActive) {
     return {
-      label: 'Không hoạt động',
+      label: 'Inactive',
       className: 'bg-slate-200 text-slate-600',
     };
   }
 
   return {
-    label: 'Hoạt động',
+    label: 'Active',
     className: 'bg-emerald-100 text-emerald-700',
   };
 }
@@ -141,8 +113,6 @@ function containsSearchTerm(staff: StaffAccount, searchTerm: string): boolean {
 }
 
 export function StaffManagementPage() {
-  const router = useRouter();
-  const { user, logout } = useAuth();
   const { staffs, loading, creating, error, createStaff, refetch } = useStaffManagement();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -152,34 +122,12 @@ export function StaffManagementPage() {
   const [formData, setFormData] = useState<CreateStaffFormState>(INITIAL_FORM_STATE);
   const [fieldErrors, setFieldErrors] = useState<CreateStaffFieldErrors>({});
   const [submitError, setSubmitError] = useState('');
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const filteredStaffs = useMemo(() => {
     const normalizedSearchTerm = searchTerm.trim();
     if (!normalizedSearchTerm) return staffs;
     return staffs.filter((staff) => containsSearchTerm(staff, normalizedSearchTerm));
   }, [searchTerm, staffs]);
-
-  const adminDisplayName = user?.name || user?.email || 'Admin';
-
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
-  };
-
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, []);
 
   const openCreateDialog = () => {
     setFieldErrors({});
@@ -203,7 +151,7 @@ export function StaffManagementPage() {
   };
 
   const handleUnavailableAction = () => {
-    toast.info('API cập nhật/xóa staff chưa sẵn sàng. Hiện tại đang hỗ trợ Read và Create.');
+    toast.info('Update/delete staff APIs are not ready. Currently supporting Read and Create.');
   };
 
   const validateForm = (): boolean => {
@@ -213,27 +161,27 @@ export function StaffManagementPage() {
     const phoneValue = formData.phone.trim();
 
     if (!emailValue) {
-      nextErrors.email = 'Vui lòng nhập email.';
+      nextErrors.email = 'Please enter an email address.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
-      nextErrors.email = 'Email chưa đúng định dạng.';
+      nextErrors.email = 'Invalid email format.';
     }
 
     if (!fullNameValue) {
-      nextErrors.fullName = 'Vui lòng nhập họ tên.';
+      nextErrors.fullName = 'Please enter full name.';
     } else if (fullNameValue.length < 2) {
-      nextErrors.fullName = 'Họ tên cần tối thiểu 2 ký tự.';
+      nextErrors.fullName = 'Full name must be at least 2 characters.';
     }
 
     if (!phoneValue) {
-      nextErrors.phone = 'Vui lòng nhập số điện thoại.';
+      nextErrors.phone = 'Please enter a phone number.';
     } else if (!/^[0-9]{9,15}$/.test(phoneValue)) {
-      nextErrors.phone = 'Số điện thoại phải gồm 9-15 chữ số.';
+      nextErrors.phone = 'Phone number must be between 9 and 15 digits.';
     }
 
     if (!formData.password) {
-      nextErrors.password = 'Vui lòng nhập mật khẩu.';
+      nextErrors.password = 'Please enter a password.';
     } else if (formData.password.length < 6) {
-      nextErrors.password = 'Mật khẩu cần ít nhất 6 ký tự.';
+      nextErrors.password = 'Password must be at least 6 characters.';
     }
 
     setFieldErrors(nextErrors);
@@ -257,178 +205,28 @@ export function StaffManagementPage() {
 
     try {
       await createStaff(payload);
-      toast.success(`Tạo tài khoản nhân viên cho ${payload.fullName} thành công.`);
+      toast.success(`Successfully created staff account for ${payload.fullName}.`);
       closeCreateDialog(false);
     } catch (err) {
       if (err instanceof ApiError) {
         const mappedErrors = mapCreateStaffErrors(err);
         setFieldErrors(mappedErrors);
         if (!Object.values(mappedErrors).some(Boolean)) {
-          setSubmitError(err.message || 'Không thể tạo tài khoản nhân viên.');
+          setSubmitError(err.message || 'Failed to create staff account.');
         }
       } else if (err instanceof Error) {
         setSubmitError(err.message);
       } else {
-        setSubmitError('Không thể tạo tài khoản nhân viên.');
+        setSubmitError('Failed to create staff account.');
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#eceef3] text-slate-800">
-      <div className="grid min-h-screen lg:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[#d8dbe2] bg-[#f4f5f8] lg:flex lg:flex-col">
-          <div className="flex items-center justify-between border-b border-[#dde0e6] px-5 py-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f97316] text-lg font-bold text-white">
-                F
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-slate-700">FoodGo</p>
-                <p className="text-xs tracking-[0.2em] text-slate-500">ADMIN</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="rounded-lg p-1 text-slate-500 transition hover:bg-[#e6e8ee] hover:text-slate-700"
-              aria-label="Thu gọn menu quản trị"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          </div>
-
-          <nav className="flex-1 space-y-1 px-3 py-6">
-            {SIDEBAR_ITEMS.map((item) => {
-              const ItemIcon = item.icon;
-              const itemClassName = `flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
-                item.active
-                  ? 'bg-[#f97316] text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-[#eceef4]'
-              }`;
-
-              if (item.href) {
-                return (
-                  <Link key={item.label} href={item.href} className={itemClassName}>
-                    <ItemIcon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              }
-
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={handleUnavailableAction}
-                  className={itemClassName}
-                >
-                  <ItemIcon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="px-5 pb-6">
-            <div className="h-7 w-7 rounded-full bg-slate-900" />
-          </div>
-        </aside>
-
-        <div className="flex min-h-screen flex-col">
-          <header className="border-b border-[#d9dce3] bg-[#f5f6f8] px-4 py-4 md:px-6 lg:px-8">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h1 className="text-lg font-semibold text-slate-800">Quản lý nhân viên</h1>
-                <p className="text-sm text-slate-500">FoodGo Admin / Quản lý nhân viên</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="rounded-full p-2 text-slate-500 transition hover:bg-white hover:text-slate-700"
-                  aria-label="Thông báo"
-                >
-                  <Bell className="h-5 w-5" />
-                </button>
-                <div className="relative" ref={profileMenuRef}>
-                  <button
-                    type="button"
-                    onClick={() => setIsProfileOpen((prev) => !prev)}
-                    className="flex items-center gap-3 rounded-2xl border border-[#dddfe5] bg-white px-3 py-2 transition hover:bg-slate-50"
-                    aria-haspopup="menu"
-                    aria-expanded={isProfileOpen}
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
-                      {getNameInitial(adminDisplayName)}
-                    </div>
-                    <div className="hidden sm:block">
-                      <p className="text-sm font-semibold text-slate-700">{adminDisplayName}</p>
-                      <p className="text-xs text-slate-500">Quản trị viên</p>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-slate-500" />
-                  </button>
-
-                  {isProfileOpen && (
-                    <div
-                      role="menu"
-                      className="absolute right-0 mt-2 w-44 rounded-xl border border-[#e2e5ec] bg-white shadow-lg"
-                    >
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </header>
-
-          <div className="border-b border-[#d9dce3] bg-[#f5f6f8] px-4 py-3 lg:hidden">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {SIDEBAR_ITEMS.map((item) => {
-                const ItemIcon = item.icon;
-                const itemClassName = `inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-2 text-sm ${
-                  item.active
-                    ? 'border-[#f97316] bg-orange-100 text-orange-700'
-                    : 'border-[#d9dce3] bg-white text-slate-600'
-                }`;
-
-                if (item.href) {
-                  return (
-                    <Link key={`mobile-${item.label}`} href={item.href} className={itemClassName}>
-                      <ItemIcon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                }
-
-                return (
-                  <button
-                    key={`mobile-${item.label}`}
-                    type="button"
-                    onClick={handleUnavailableAction}
-                    className={itemClassName}
-                  >
-                    <ItemIcon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <main className="flex-1 px-4 py-6 md:px-6 lg:px-8">
-            <section className="rounded-2xl border border-transparent bg-transparent">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <h2 className="text-4xl font-bold leading-tight text-slate-800">Quản lý nhân viên</h2>
-                  <p className="mt-2 text-lg text-slate-500">
-                    Quản lý toàn bộ nhân viên trong hệ thống
-                  </p>
+                  <h2 className="text-4xl font-bold leading-tight text-slate-800">Manage Staff</h2>
                 </div>
                 <Button
                   type="button"
@@ -436,17 +234,19 @@ export function StaffManagementPage() {
                   className="h-11 rounded-2xl bg-[#f97316] px-6 text-base font-semibold text-white hover:bg-[#ea580c]"
                 >
                   <Plus className="h-5 w-5" />
-                  <span>Thêm nhân viên</span>
+                  <span> Add new staff</span>
                 </Button>
               </div>
 
               <div className="mt-6 max-w-[520px]">
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Label htmlFor="search-staff" className="sr-only">Search staff</Label>
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                   <Input
+                    id="search-staff"
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder="Tìm theo tên, email..."
+                    placeholder="Search by name, email..."
                     className="h-11 rounded-2xl border-[#d2d6dd] bg-white pl-10 text-sm"
                   />
                 </div>
@@ -455,14 +255,15 @@ export function StaffManagementPage() {
               <div className="mt-4 overflow-hidden rounded-2xl border border-[#d8dbe2] bg-white shadow-sm">
                 <div className="max-h-[56vh] overflow-auto">
                   <table className="min-w-[980px] w-full text-left text-sm">
+                    <caption className="sr-only">List of staff members</caption>
                     <thead className="sticky top-0 z-10 bg-[#f6f7f9] text-xs uppercase tracking-wide text-slate-500">
                       <tr>
-                        <th className="px-4 py-4 font-semibold">Nhân viên</th>
-                        <th className="px-4 py-4 font-semibold">Số điện thoại</th>
-                        <th className="px-4 py-4 font-semibold">Vai trò</th>
-                        <th className="px-4 py-4 font-semibold">Trạng thái</th>
-                        <th className="px-4 py-4 font-semibold">Ngày tạo</th>
-                        <th className="px-4 py-4 text-right font-semibold">Hành động</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Staff</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Phone Number</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Role</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Status</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Created At</th>
+                        <th scope="col" className="px-4 py-4 text-right font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -472,7 +273,7 @@ export function StaffManagementPage() {
                             colSpan={6}
                             className="border-t border-[#eef0f4] px-4 py-10 text-center text-slate-500"
                           >
-                            Đang tải danh sách nhân viên...
+                            Loading staff list...
                           </td>
                         </tr>
                       )}
@@ -492,7 +293,7 @@ export function StaffManagementPage() {
                               }}
                               className="rounded-xl"
                             >
-                              Tải lại
+                              Retry
                             </Button>
                           </td>
                         </tr>
@@ -504,7 +305,7 @@ export function StaffManagementPage() {
                             colSpan={6}
                             className="border-t border-[#eef0f4] px-4 py-10 text-center text-slate-500"
                           >
-                            Không tìm thấy nhân viên phù hợp.
+                            No matching staff found.
                           </td>
                         </tr>
                       )}
@@ -514,7 +315,7 @@ export function StaffManagementPage() {
                         filteredStaffs.map((staff, index) => {
                           const status = getStatusInfo(staff);
                           return (
-                            <tr key={`${staff.userId || staff.email}-${index}`} className="hover:bg-[#fafbfc]">
+                            <tr key={`${staff.userId || staff.email}-${index}`} className="hover:bg-[#fafbfc] transition-colors">
                               <td className="border-t border-[#eef0f4] px-4 py-4">
                                 <div className="flex items-center gap-3">
                                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
@@ -522,7 +323,7 @@ export function StaffManagementPage() {
                                   </div>
                                   <div>
                                     <p className="font-semibold text-slate-800">
-                                      {staff.fullName || 'Chưa cập nhật'}
+                                      {staff.fullName || 'Not updated'}
                                     </p>
                                     <p className="text-xs text-slate-500">{staff.email || '-'}</p>
                                   </div>
@@ -549,26 +350,26 @@ export function StaffManagementPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleViewStaff(staff)}
-                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                                    aria-label={`Xem ${staff.fullName || staff.email}`}
+                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500"
+                                    aria-label={`View ${staff.fullName || staff.email}`}
                                   >
-                                    <Eye className="h-4 w-4" />
+                                    <Eye className="h-4 w-4" aria-hidden="true" />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={handleUnavailableAction}
-                                    className="rounded-md p-1.5 text-blue-500 transition hover:bg-blue-50 hover:text-blue-600"
-                                    aria-label={`Cập nhật ${staff.fullName || staff.email}`}
+                                    className="rounded-md p-1.5 text-blue-500 transition hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    aria-label={`Edit ${staff.fullName || staff.email}`}
                                   >
-                                    <Pencil className="h-4 w-4" />
+                                    <Pencil className="h-4 w-4" aria-hidden="true" />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={handleUnavailableAction}
-                                    className="rounded-md p-1.5 text-red-500 transition hover:bg-red-50 hover:text-red-600"
-                                    aria-label={`Khóa ${staff.fullName || staff.email}`}
+                                    className="rounded-md p-1.5 text-red-500 transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    aria-label={`Ban ${staff.fullName || staff.email}`}
                                   >
-                                    <Ban className="h-4 w-4" />
+                                    <Ban className="h-4 w-4" aria-hidden="true" />
                                   </button>
                                 </div>
                               </td>
@@ -579,23 +380,18 @@ export function StaffManagementPage() {
                   </table>
                 </div>
               </div>
-            </section>
-          </main>
-        </div>
-      </div>
-
       <Dialog open={isCreateDialogOpen} onOpenChange={closeCreateDialog}>
         <DialogContent className="sm:max-w-[560px] border-[#d9dce3] bg-white text-slate-800 shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Thêm nhân viên</DialogTitle>
+            <DialogTitle>Add New Staff</DialogTitle>
             <DialogDescription className="text-slate-500">
-              Tạo tài khoản nhân viên mới bằng endpoint POST /admin/staffs.
+              Create a new staff account using the POST /admin/staffs endpoint.
             </DialogDescription>
           </DialogHeader>
 
           <form className="space-y-4" onSubmit={handleCreateStaff}>
             <div className="space-y-2">
-              <Label htmlFor="staff-full-name">Họ và tên</Label>
+              <Label htmlFor="staff-full-name">Full Name</Label>
               <Input
                 id="staff-full-name"
                 value={formData.fullName}
@@ -628,7 +424,7 @@ export function StaffManagementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="staff-phone">Số điện thoại</Label>
+              <Label htmlFor="staff-phone">Phone Number</Label>
               <Input
                 id="staff-phone"
                 type="tel"
@@ -637,14 +433,14 @@ export function StaffManagementPage() {
                   setFormData((prev) => ({ ...prev, phone: event.target.value }));
                   setFieldErrors((prev) => ({ ...prev, phone: undefined }));
                 }}
-                placeholder="09012393659"
+                placeholder="0901239365"
                 className={`bg-white text-slate-900 ${fieldErrors.phone ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
               {fieldErrors.phone && <p className="text-xs text-red-600">{fieldErrors.phone}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="staff-password">Mật khẩu</Label>
+              <Label htmlFor="staff-password">Password</Label>
               <Input
                 id="staff-password"
                 type="password"
@@ -653,7 +449,7 @@ export function StaffManagementPage() {
                   setFormData((prev) => ({ ...prev, password: event.target.value }));
                   setFieldErrors((prev) => ({ ...prev, password: undefined }));
                 }}
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder="Minimum 6 characters"
                 className={`bg-white text-slate-900 ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
               {fieldErrors.password && (
@@ -662,7 +458,7 @@ export function StaffManagementPage() {
             </div>
 
             {submitError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+               <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
                 {submitError}
               </div>
             )}
@@ -674,14 +470,14 @@ export function StaffManagementPage() {
                 className="rounded-xl"
                 onClick={() => closeCreateDialog(false)}
               >
-                Hủy
+                Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={creating}
                 className="rounded-xl bg-[#f97316] text-white hover:bg-[#ea580c]"
               >
-                {creating ? 'Đang tạo...' : 'Tạo tài khoản'}
+                {creating ? 'Creating...' : 'Create Account'}
               </Button>
             </DialogFooter>
           </form>
@@ -691,14 +487,14 @@ export function StaffManagementPage() {
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
         <DialogContent className="sm:max-w-[480px] border-[#d9dce3] bg-white text-slate-800 shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Thông tin nhân viên</DialogTitle>
-            <DialogDescription>Thông tin chi tiết từ danh sách staff hiện tại.</DialogDescription>
+            <DialogTitle>Staff Information</DialogTitle>
+            <DialogDescription>Detailed information of the selected staff member.</DialogDescription>
           </DialogHeader>
 
           {selectedStaff && (
             <div className="space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Họ và tên</span>
+                <span className="text-slate-500">Full Name</span>
                 <span className="font-medium text-slate-800">{selectedStaff.fullName || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
@@ -706,15 +502,15 @@ export function StaffManagementPage() {
                 <span className="font-medium text-slate-800">{selectedStaff.email || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Số điện thoại</span>
+                <span className="text-slate-500">Phone Number</span>
                 <span className="font-medium text-slate-800">{selectedStaff.phone || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Vai trò</span>
+                <span className="text-slate-500">Role</span>
                 <span className="font-medium text-slate-800">{mapRoleLabel(selectedStaff.role)}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Ngày tạo</span>
+                <span className="text-slate-500">Created At</span>
                 <span className="font-medium text-slate-800">{formatDate(selectedStaff.createdAt)}</span>
               </div>
             </div>
@@ -722,7 +518,7 @@ export function StaffManagementPage() {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
-              Đóng
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

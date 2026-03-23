@@ -1,27 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ComponentType, type FormEvent } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState, type FormEvent } from 'react';
 import {
   Ban,
-  BarChart3,
-  Bell,
-  Bike,
-  ChevronDown,
-  ChevronLeft,
-  ClipboardList,
   Eye,
-  LayoutDashboard,
   Pencil,
   Plus,
   Search,
-  Settings,
-  Users,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { ApiError } from '@/lib/api';
-import { useAuth } from '@/features/auth';
 import {
   Button,
   Dialog,
@@ -35,13 +23,6 @@ import {
 } from '@/components/ui';
 import { useDriverManagement } from './useDriverManagement';
 import type { CreateDriverRequest, DriverAccount } from './driver.service';
-
-interface SidebarItem {
-  label: string;
-  href?: string;
-  icon: ComponentType<{ className?: string }>;
-  active?: boolean;
-}
 
 interface CreateDriverFormState {
   email: string;
@@ -60,15 +41,6 @@ interface CreateDriverFieldErrors {
   vehicleType?: string;
   licensePlate?: string;
 }
-
-const SIDEBAR_ITEMS: SidebarItem[] = [
-  { label: 'Tong quan', icon: LayoutDashboard },
-  { label: 'Quan ly nhan vien', href: '/admin/staffs', icon: Users },
-  { label: 'Quan ly tai xe', href: '/admin/drivers', icon: Bike, active: true },
-  { label: 'Quan ly thuc don', icon: ClipboardList },
-  { label: 'Bao cao', icon: BarChart3 },
-  { label: 'Cai dat', icon: Settings },
-];
 
 const INITIAL_FORM_STATE: CreateDriverFormState = {
   email: '',
@@ -94,7 +66,7 @@ function mapCreateDriverErrors(error: ApiError): CreateDriverFieldErrors {
   };
 
   if (error.statusCode === 409 && !fieldErrors.email) {
-    fieldErrors.email = 'Email da ton tai trong he thong.';
+    fieldErrors.email = 'Email already exists in the system.';
   }
 
   return fieldErrors;
@@ -109,13 +81,13 @@ function getNameInitial(value: string): string {
 function getStatusInfo(driver: DriverAccount): { label: string; className: string } {
   if (driver.isActive === false || driver.status?.toUpperCase() === 'INACTIVE') {
     return {
-      label: 'Khong hoat dong',
+      label: 'Inactive',
       className: 'bg-slate-200 text-slate-600',
     };
   }
 
   return {
-    label: driver.status ?? 'Hoat dong',
+    label: driver.status ?? 'Active',
     className: 'bg-emerald-100 text-emerald-700',
   };
 }
@@ -141,8 +113,6 @@ function containsSearchTerm(driver: DriverAccount, searchTerm: string): boolean 
 }
 
 export function DriverManagementPage() {
-  const router = useRouter();
-  const { user, logout } = useAuth();
   const { drivers, loading, creating, error, createDriver, refetch } = useDriverManagement();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -152,34 +122,12 @@ export function DriverManagementPage() {
   const [formData, setFormData] = useState<CreateDriverFormState>(INITIAL_FORM_STATE);
   const [fieldErrors, setFieldErrors] = useState<CreateDriverFieldErrors>({});
   const [submitError, setSubmitError] = useState('');
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const filteredDrivers = useMemo(() => {
     const normalizedSearchTerm = searchTerm.trim();
     if (!normalizedSearchTerm) return drivers;
     return drivers.filter((driver) => containsSearchTerm(driver, normalizedSearchTerm));
   }, [searchTerm, drivers]);
-
-  const adminDisplayName = user?.name || user?.email || 'Admin';
-
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
-  };
-
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, []);
 
   const openCreateDialog = () => {
     setFieldErrors({});
@@ -203,7 +151,7 @@ export function DriverManagementPage() {
   };
 
   const handleUnavailableAction = () => {
-    toast.info('API cap nhat/xoa driver chua san sang. Hien tai chi ho tro Read va Create.');
+    toast.info('Update/delete driver APIs are not ready. Currently only supporting Read and Create.');
   };
 
   const validateForm = (): boolean => {
@@ -215,35 +163,35 @@ export function DriverManagementPage() {
     const licensePlateValue = formData.licensePlate.trim();
 
     if (!emailValue) {
-      nextErrors.email = 'Vui long nhap email.';
+      nextErrors.email = 'Please enter an email address.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
-      nextErrors.email = 'Email chua dung dinh dang.';
+      nextErrors.email = 'Invalid email format.';
     }
 
     if (!fullNameValue) {
-      nextErrors.fullName = 'Vui long nhap ho ten.';
+      nextErrors.fullName = 'Please enter full name.';
     } else if (fullNameValue.length < 2) {
-      nextErrors.fullName = 'Ho ten can toi thieu 2 ky tu.';
+      nextErrors.fullName = 'Full name must be at least 2 characters.';
     }
 
     if (!phoneValue) {
-      nextErrors.phone = 'Vui long nhap so dien thoai.';
+      nextErrors.phone = 'Please enter a phone number.';
     } else if (!/^[0-9]{9,15}$/.test(phoneValue)) {
-      nextErrors.phone = 'So dien thoai phai gom 9-15 chu so.';
+      nextErrors.phone = 'Phone number must be between 9 and 15 digits.';
     }
 
     if (!formData.password) {
-      nextErrors.password = 'Vui long nhap mat khau.';
+      nextErrors.password = 'Please enter a password.';
     } else if (formData.password.length < 6) {
-      nextErrors.password = 'Mat khau can it nhat 6 ky tu.';
+      nextErrors.password = 'Password must be at least 6 characters.';
     }
 
     if (!vehicleTypeValue) {
-      nextErrors.vehicleType = 'Vui long nhap loai xe.';
+      nextErrors.vehicleType = 'Please enter the vehicle type.';
     }
 
     if (!licensePlateValue) {
-      nextErrors.licensePlate = 'Vui long nhap bien so.';
+      nextErrors.licensePlate = 'Please enter the license plate.';
     }
 
     setFieldErrors(nextErrors);
@@ -269,178 +217,28 @@ export function DriverManagementPage() {
 
     try {
       await createDriver(payload);
-      toast.success(`Tao tai khoan tai xe cho ${payload.fullName} thanh cong.`);
+      toast.success(`Successfully created driver account for ${payload.fullName}.`);
       closeCreateDialog(false);
     } catch (err) {
       if (err instanceof ApiError) {
         const mappedErrors = mapCreateDriverErrors(err);
         setFieldErrors(mappedErrors);
         if (!Object.values(mappedErrors).some(Boolean)) {
-          setSubmitError(err.message || 'Khong the tao tai khoan tai xe.');
+          setSubmitError(err.message || 'Failed to create driver account.');
         }
       } else if (err instanceof Error) {
         setSubmitError(err.message);
       } else {
-        setSubmitError('Khong the tao tai khoan tai xe.');
+        setSubmitError('Failed to create driver account.');
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#eceef3] text-slate-800">
-      <div className="grid min-h-screen lg:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[#d8dbe2] bg-[#f4f5f8] lg:flex lg:flex-col">
-          <div className="flex items-center justify-between border-b border-[#dde0e6] px-5 py-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f97316] text-lg font-bold text-white">
-                F
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-slate-700">FoodGo</p>
-                <p className="text-xs tracking-[0.2em] text-slate-500">ADMIN</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="rounded-lg p-1 text-slate-500 transition hover:bg-[#e6e8ee] hover:text-slate-700"
-              aria-label="Thu gon menu quan tri"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          </div>
-
-          <nav className="flex-1 space-y-1 px-3 py-6">
-            {SIDEBAR_ITEMS.map((item) => {
-              const ItemIcon = item.icon;
-              const itemClassName = `flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
-                item.active
-                  ? 'bg-[#f97316] text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-[#eceef4]'
-              }`;
-
-              if (item.href) {
-                return (
-                  <Link key={item.label} href={item.href} className={itemClassName}>
-                    <ItemIcon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              }
-
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={handleUnavailableAction}
-                  className={itemClassName}
-                >
-                  <ItemIcon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="px-5 pb-6">
-            <div className="h-7 w-7 rounded-full bg-slate-900" />
-          </div>
-        </aside>
-
-        <div className="flex min-h-screen flex-col">
-          <header className="border-b border-[#d9dce3] bg-[#f5f6f8] px-4 py-4 md:px-6 lg:px-8">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h1 className="text-lg font-semibold text-slate-800">Quan ly tai xe</h1>
-                <p className="text-sm text-slate-500">FoodGo Admin / Quan ly tai xe</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="rounded-full p-2 text-slate-500 transition hover:bg-white hover:text-slate-700"
-                  aria-label="Thong bao"
-                >
-                  <Bell className="h-5 w-5" />
-                </button>
-                <div className="relative" ref={profileMenuRef}>
-                  <button
-                    type="button"
-                    onClick={() => setIsProfileOpen((prev) => !prev)}
-                    className="flex items-center gap-3 rounded-2xl border border-[#dddfe5] bg-white px-3 py-2 transition hover:bg-slate-50"
-                    aria-haspopup="menu"
-                    aria-expanded={isProfileOpen}
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
-                      {getNameInitial(adminDisplayName)}
-                    </div>
-                    <div className="hidden sm:block">
-                      <p className="text-sm font-semibold text-slate-700">{adminDisplayName}</p>
-                      <p className="text-xs text-slate-500">Quan tri vien</p>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-slate-500" />
-                  </button>
-
-                  {isProfileOpen && (
-                    <div
-                      role="menu"
-                      className="absolute right-0 mt-2 w-44 rounded-xl border border-[#e2e5ec] bg-white shadow-lg"
-                    >
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </header>
-
-          <div className="border-b border-[#d9dce3] bg-[#f5f6f8] px-4 py-3 lg:hidden">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {SIDEBAR_ITEMS.map((item) => {
-                const ItemIcon = item.icon;
-                const itemClassName = `inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-2 text-sm ${
-                  item.active
-                    ? 'border-[#f97316] bg-orange-100 text-orange-700'
-                    : 'border-[#d9dce3] bg-white text-slate-600'
-                }`;
-
-                if (item.href) {
-                  return (
-                    <Link key={`mobile-${item.label}`} href={item.href} className={itemClassName}>
-                      <ItemIcon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                }
-
-                return (
-                  <button
-                    key={`mobile-${item.label}`}
-                    type="button"
-                    onClick={handleUnavailableAction}
-                    className={itemClassName}
-                  >
-                    <ItemIcon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <main className="flex-1 px-4 py-6 md:px-6 lg:px-8">
-            <section className="rounded-2xl border border-transparent bg-transparent">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <h2 className="text-4xl font-bold leading-tight text-slate-800">Quan ly tai xe</h2>
-                  <p className="mt-2 text-lg text-slate-500">
-                    Quan ly toan bo tai xe trong he thong
-                  </p>
+                  <h2 className="text-4xl font-bold leading-tight text-slate-800">Manage Driver</h2>
                 </div>
                 <Button
                   type="button"
@@ -448,17 +246,19 @@ export function DriverManagementPage() {
                   className="h-11 rounded-2xl bg-[#f97316] px-6 text-base font-semibold text-white hover:bg-[#ea580c]"
                 >
                   <Plus className="h-5 w-5" />
-                  <span>Them tai xe</span>
+                  <span> Add new driver</span>
                 </Button>
               </div>
 
               <div className="mt-6 max-w-[520px]">
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Label htmlFor="search-driver" className="sr-only">Search driver</Label>
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                   <Input
+                    id="search-driver"
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder="Tim theo ten, email, bien so..."
+                    placeholder="Search by name, email, license plate..."
                     className="h-11 rounded-2xl border-[#d2d6dd] bg-white pl-10 text-sm"
                   />
                 </div>
@@ -467,15 +267,16 @@ export function DriverManagementPage() {
               <div className="mt-4 overflow-hidden rounded-2xl border border-[#d8dbe2] bg-white shadow-sm">
                 <div className="max-h-[56vh] overflow-auto">
                   <table className="min-w-[980px] w-full text-left text-sm">
+                    <caption className="sr-only">List of drivers</caption>
                     <thead className="sticky top-0 z-10 bg-[#f6f7f9] text-xs uppercase tracking-wide text-slate-500">
                       <tr>
-                        <th className="px-4 py-4 font-semibold">Tai xe</th>
-                        <th className="px-4 py-4 font-semibold">So dien thoai</th>
-                        <th className="px-4 py-4 font-semibold">Loai xe</th>
-                        <th className="px-4 py-4 font-semibold">Bien so</th>
-                        <th className="px-4 py-4 font-semibold">Trang thai</th>
-                        <th className="px-4 py-4 font-semibold">Online</th>
-                        <th className="px-4 py-4 text-right font-semibold">Hanh dong</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Driver</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Phone Number</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Vehicle</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">License Plate</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Status</th>
+                        <th scope="col" className="px-4 py-4 font-semibold">Online</th>
+                        <th scope="col" className="px-4 py-4 text-right font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -485,7 +286,7 @@ export function DriverManagementPage() {
                             colSpan={7}
                             className="border-t border-[#eef0f4] px-4 py-10 text-center text-slate-500"
                           >
-                            Dang tai danh sach tai xe...
+                            Loading drivers list...
                           </td>
                         </tr>
                       )}
@@ -505,7 +306,7 @@ export function DriverManagementPage() {
                               }}
                               className="rounded-xl"
                             >
-                              Tai lai
+                              Retry
                             </Button>
                           </td>
                         </tr>
@@ -517,7 +318,7 @@ export function DriverManagementPage() {
                             colSpan={7}
                             className="border-t border-[#eef0f4] px-4 py-10 text-center text-slate-500"
                           >
-                            Khong tim thay tai xe phu hop.
+                            No matching drivers found.
                           </td>
                         </tr>
                       )}
@@ -528,7 +329,7 @@ export function DriverManagementPage() {
                           const status = getStatusInfo(driver);
                           const online = getOnlineInfo(driver);
                           return (
-                            <tr key={`${driver.userId || driver.email}-${index}`} className="hover:bg-[#fafbfc]">
+                            <tr key={`${driver.userId || driver.email}-${index}`} className="hover:bg-[#fafbfc] transition-colors">
                               <td className="border-t border-[#eef0f4] px-4 py-4">
                                 <div className="flex items-center gap-3">
                                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
@@ -536,7 +337,7 @@ export function DriverManagementPage() {
                                   </div>
                                   <div>
                                     <p className="font-semibold text-slate-800">
-                                      {driver.fullName || 'Chua cap nhat'}
+                                      {driver.fullName || 'Not updated'}
                                     </p>
                                     <p className="text-xs text-slate-500">{driver.email || '-'}</p>
                                   </div>
@@ -570,26 +371,26 @@ export function DriverManagementPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleViewDriver(driver)}
-                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                                    aria-label={`Xem ${driver.fullName || driver.email}`}
+                                    className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500"
+                                    aria-label={`View ${driver.fullName || driver.email}`}
                                   >
-                                    <Eye className="h-4 w-4" />
+                                    <Eye className="h-4 w-4" aria-hidden="true" />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={handleUnavailableAction}
-                                    className="rounded-md p-1.5 text-blue-500 transition hover:bg-blue-50 hover:text-blue-600"
-                                    aria-label={`Cap nhat ${driver.fullName || driver.email}`}
+                                    className="rounded-md p-1.5 text-blue-500 transition hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    aria-label={`Edit ${driver.fullName || driver.email}`}
                                   >
-                                    <Pencil className="h-4 w-4" />
+                                    <Pencil className="h-4 w-4" aria-hidden="true" />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={handleUnavailableAction}
-                                    className="rounded-md p-1.5 text-red-500 transition hover:bg-red-50 hover:text-red-600"
-                                    aria-label={`Khoa ${driver.fullName || driver.email}`}
+                                    className="rounded-md p-1.5 text-red-500 transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    aria-label={`Ban ${driver.fullName || driver.email}`}
                                   >
-                                    <Ban className="h-4 w-4" />
+                                    <Ban className="h-4 w-4" aria-hidden="true" />
                                   </button>
                                 </div>
                               </td>
@@ -600,23 +401,19 @@ export function DriverManagementPage() {
                   </table>
                 </div>
               </div>
-            </section>
-          </main>
-        </div>
-      </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={closeCreateDialog}>
         <DialogContent className="sm:max-w-[600px] border-[#d9dce3] bg-white text-slate-800 shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Them tai xe</DialogTitle>
+            <DialogTitle>Add New Driver</DialogTitle>
             <DialogDescription className="text-slate-500">
-              Tao tai khoan tai xe moi bang endpoint POST /admin/drivers.
+              Create a new driver account using the POST /admin/drivers endpoint.
             </DialogDescription>
           </DialogHeader>
 
           <form className="space-y-4" onSubmit={handleCreateDriver}>
             <div className="space-y-2">
-              <Label htmlFor="driver-full-name">Ho va ten</Label>
+              <Label htmlFor="driver-full-name">Full Name</Label>
               <Input
                 id="driver-full-name"
                 value={formData.fullName}
@@ -649,7 +446,7 @@ export function DriverManagementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="driver-phone">So dien thoai</Label>
+              <Label htmlFor="driver-phone">Phone Number</Label>
               <Input
                 id="driver-phone"
                 type="tel"
@@ -665,7 +462,7 @@ export function DriverManagementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="driver-password">Mat khau</Label>
+              <Label htmlFor="driver-password">Password</Label>
               <Input
                 id="driver-password"
                 type="password"
@@ -674,7 +471,7 @@ export function DriverManagementPage() {
                   setFormData((prev) => ({ ...prev, password: event.target.value }));
                   setFieldErrors((prev) => ({ ...prev, password: undefined }));
                 }}
-                placeholder="Toi thieu 6 ky tu"
+                placeholder="Minimum 6 characters"
                 className={`bg-white text-slate-900 ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
               {fieldErrors.password && (
@@ -683,7 +480,7 @@ export function DriverManagementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="driver-vehicle">Loai xe</Label>
+              <Label htmlFor="driver-vehicle">Vehicle Type</Label>
               <Input
                 id="driver-vehicle"
                 value={formData.vehicleType}
@@ -700,7 +497,7 @@ export function DriverManagementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="driver-license">Bien so</Label>
+              <Label htmlFor="driver-license">License Plate</Label>
               <Input
                 id="driver-license"
                 value={formData.licensePlate}
@@ -729,14 +526,14 @@ export function DriverManagementPage() {
                 className="rounded-xl"
                 onClick={() => closeCreateDialog(false)}
               >
-                Huy
+                Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={creating}
                 className="rounded-xl bg-[#f97316] text-white hover:bg-[#ea580c]"
               >
-                {creating ? 'Dang tao...' : 'Tao tai khoan'}
+                {creating ? 'Creating...' : 'Create Account'}
               </Button>
             </DialogFooter>
           </form>
@@ -746,16 +543,16 @@ export function DriverManagementPage() {
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
         <DialogContent className="sm:max-w-[480px] border-[#d9dce3] bg-white text-slate-800 shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Thong tin tai xe</DialogTitle>
+            <DialogTitle>Driver Information</DialogTitle>
             <DialogDescription className="text-slate-500">
-              Thong tin chi tiet tu danh sach tai xe hien tai.
+              Detailed information of the selected driver.
             </DialogDescription>
           </DialogHeader>
 
           {selectedDriver && (
             <div className="space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Ho va ten</span>
+                <span className="text-slate-500">Full Name</span>
                 <span className="font-medium text-slate-800">{selectedDriver.fullName || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
@@ -763,19 +560,19 @@ export function DriverManagementPage() {
                 <span className="font-medium text-slate-800">{selectedDriver.email || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">So dien thoai</span>
+                <span className="text-slate-500">Phone Number</span>
                 <span className="font-medium text-slate-800">{selectedDriver.phone || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Loai xe</span>
+                <span className="text-slate-500">Vehicle Type</span>
                 <span className="font-medium text-slate-800">{selectedDriver.vehicleType || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Bien so</span>
+                <span className="text-slate-500">License Plate</span>
                 <span className="font-medium text-slate-800">{selectedDriver.licensePlate || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Trang thai</span>
+                <span className="text-slate-500">Status</span>
                 <span className="font-medium text-slate-800">{selectedDriver.status || '-'}</span>
               </div>
               <div className="flex justify-between gap-4">
@@ -789,7 +586,7 @@ export function DriverManagementPage() {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
-              Dong
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

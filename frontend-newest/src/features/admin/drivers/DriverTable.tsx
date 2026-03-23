@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { adminService } from './admin.service';
+import { adminService } from '../admin.service';
 import type { User } from '@/types';
 import { Badge, Button, Spinner } from '@/components/ui';
 
@@ -25,14 +25,6 @@ export function DriverTable() {
     }
   };
 
-  const handleApprove = async (userId: string) => {
-    try {
-      await adminService.approveDriver(userId);
-      await loadDrivers();
-    } catch (err) {
-      alert('Failed to approve driver');
-    }
-  };
 
   if (loading) {
     return (
