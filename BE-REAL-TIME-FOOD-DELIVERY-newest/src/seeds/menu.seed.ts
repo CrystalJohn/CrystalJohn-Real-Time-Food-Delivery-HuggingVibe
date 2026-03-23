@@ -6,6 +6,69 @@ import { MenuCategory } from '../entities/menu-category.entity';
 import { MenuItem } from '../entities/menu-item.entity';
 import { MenuItemImage } from '../entities/menu-item-image.entity';
 
+/* ------------------------------------------------------------------ */
+/*  Real, distinct Unsplash photo IDs mapped to each menu item        */
+/* ------------------------------------------------------------------ */
+const ITEM_PHOTO_IDS: Record<string, string> = {
+  // Pizza
+  'Seafood Deluxe Pizza':          'photo-1565299624946-b28f40a0ae38',
+  'Pepperoni Pizza':               'photo-1628840042765-356cda07504e',
+
+  // Burger
+  'Classic Beef Burger':           'photo-1568901346375-23c9450c58cd',
+  'Cheese Burger':                 'photo-1586190848861-99aa4a171e90',
+
+  // Fried Chicken
+  'Crispy Fried Chicken (2 pcs)':  'photo-1626082927389-6cd097cdc6ec',
+  'Spicy Fried Chicken (4 pcs)':   'photo-1562967914-608f82629710',
+
+  // Pasta
+  'Spaghetti Bolognese':           'photo-1621996346565-e3dbc646d9a9',
+  'Creamy Mushroom Pasta':         'photo-1645112411341-6c4fd023714a',
+
+  // Rice Meals
+  'Teriyaki Chicken Rice':         'photo-1546069901-ba9599a7e63c',
+  'Beef Stir-fry Rice':            'photo-1603133872878-684f208fb84b',
+
+  // Sides
+  'French Fries':                  'photo-1573080496219-bb080dd4f877',
+  'Fried Sausage':                 'photo-1612871689353-cef9b1961d8f',
+
+  // Drinks
+  'Coca Cola Can':                 'photo-1554866585-cd94860890b7',
+  'Lemon Iced Tea':                'photo-1556679343-c7306c1976bc',
+
+  // Milk Tea
+  'Classic Milk Tea':              'photo-1558857563-b371033873b8',
+  'Matcha Milk Tea':               'photo-1515823064-d6e0c04616a7',
+
+  // Desserts
+  'Tiramisu':                      'photo-1571877227200-a0d98ea607e9',
+  'Caramel Pudding':               'photo-1488477181946-6428a0291777',
+
+  // Combo
+  'Pizza + Drink Combo':           'photo-1513104890138-7c749659a591',
+  'Burger + Fries + Drink Combo':  'photo-1550547660-d9450f859349',
+};
+
+/** Build a thumbnail + full-size image pair from a real Unsplash photo ID */
+const buildImagePair = (itemName: string) => {
+  const photoId = ITEM_PHOTO_IDS[itemName];
+  if (!photoId) throw new Error(`Missing Unsplash photo ID for: ${itemName}`);
+  return [
+    {
+      imageUrl: `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=400&q=75`,
+      isThumbnail: true,
+      sortOrder: 0,
+    },
+    {
+      imageUrl: `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=800&q=75`,
+      isThumbnail: false,
+      sortOrder: 1,
+    },
+  ];
+};
+
 @Injectable()
 export class MenuSeedService implements OnApplicationBootstrap {
   private readonly logger = new Logger(MenuSeedService.name);
@@ -113,22 +176,6 @@ export class MenuSeedService implements OnApplicationBootstrap {
       categoryMap.set(category.name, category);
     }
 
-    const baseImageUrl =
-      'https://images.unsplash.com/photo-1728657862761-555d8947ae1c?auto=format&fit=crop&w=800&q=80';
-
-    const buildImagePair = (satA: number, satB: number) => [
-      {
-        imageUrl: `${baseImageUrl}&sat=${satA}`,
-        isThumbnail: true,
-        sortOrder: 0,
-      },
-      {
-        imageUrl: `${baseImageUrl}&sat=${satB}`,
-        isThumbnail: false,
-        sortOrder: 1,
-      },
-    ];
-
     const itemPayloads: Array<{
       categoryName: string;
       name: string;
@@ -151,7 +198,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(10, -10),
+        images: buildImagePair('Seafood Deluxe Pizza'),
       },
       {
         categoryName: 'Pizza',
@@ -161,7 +208,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(15, -5),
+        images: buildImagePair('Pepperoni Pizza'),
       },
       {
         categoryName: 'Burger',
@@ -171,7 +218,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(5, -15),
+        images: buildImagePair('Classic Beef Burger'),
       },
       {
         categoryName: 'Burger',
@@ -181,7 +228,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(20, -8),
+        images: buildImagePair('Cheese Burger'),
       },
       {
         categoryName: 'Fried Chicken',
@@ -191,7 +238,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(8, -12),
+        images: buildImagePair('Crispy Fried Chicken (2 pcs)'),
       },
       {
         categoryName: 'Fried Chicken',
@@ -201,7 +248,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(12, -6),
+        images: buildImagePair('Spicy Fried Chicken (4 pcs)'),
       },
       {
         categoryName: 'Pasta',
@@ -211,7 +258,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(6, -9),
+        images: buildImagePair('Spaghetti Bolognese'),
       },
       {
         categoryName: 'Pasta',
@@ -221,7 +268,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(14, -4),
+        images: buildImagePair('Creamy Mushroom Pasta'),
       },
       {
         categoryName: 'Rice Meals',
@@ -231,7 +278,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(9, -11),
+        images: buildImagePair('Teriyaki Chicken Rice'),
       },
       {
         categoryName: 'Rice Meals',
@@ -241,7 +288,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(11, -7),
+        images: buildImagePair('Beef Stir-fry Rice'),
       },
       {
         categoryName: 'Sides',
@@ -251,7 +298,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(16, -3),
+        images: buildImagePair('French Fries'),
       },
       {
         categoryName: 'Sides',
@@ -261,7 +308,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(7, -13),
+        images: buildImagePair('Fried Sausage'),
       },
       {
         categoryName: 'Drinks',
@@ -271,7 +318,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(18, -2),
+        images: buildImagePair('Coca Cola Can'),
       },
       {
         categoryName: 'Drinks',
@@ -281,7 +328,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(13, -5),
+        images: buildImagePair('Lemon Iced Tea'),
       },
       {
         categoryName: 'Milk Tea',
@@ -291,7 +338,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(17, -1),
+        images: buildImagePair('Classic Milk Tea'),
       },
       {
         categoryName: 'Milk Tea',
@@ -301,7 +348,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(4, -16),
+        images: buildImagePair('Matcha Milk Tea'),
       },
       {
         categoryName: 'Desserts',
@@ -311,7 +358,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(3, -18),
+        images: buildImagePair('Tiramisu'),
       },
       {
         categoryName: 'Desserts',
@@ -321,7 +368,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(2, -20),
+        images: buildImagePair('Caramel Pudding'),
       },
       {
         categoryName: 'Combo',
@@ -331,7 +378,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 1,
-        images: buildImagePair(1, -17),
+        images: buildImagePair('Pizza + Drink Combo'),
       },
       {
         categoryName: 'Combo',
@@ -341,7 +388,7 @@ export class MenuSeedService implements OnApplicationBootstrap {
         isAvailable: true,
         isActive: true,
         sortOrder: 2,
-        images: buildImagePair(19, -14),
+        images: buildImagePair('Burger + Fries + Drink Combo'),
       },
     ];
 
