@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { X, Trash2, Minus, Plus, ShoppingBag } from 'lucide-react';
@@ -85,7 +85,7 @@ export function CartSidebar({
       } catch (error) {
         console.error('[CartSidebar] store distance fetch failed', error);
         if (!canceled) {
-          setDistanceError('Khong the kiem tra khoang cach. Vui long thu lai.');
+          setDistanceError('Cannot verify delivery distance. Please try again.');
         }
       } finally {
         if (!canceled) {
@@ -211,7 +211,7 @@ export function CartSidebar({
                         className="mt-1 h-4 w-4"
                       />
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">Default address (Profile)</p>
+                        <p className="text-sm font-semibold text-gray-800">Default address</p>
                         <p className="mt-1 text-xs text-gray-600">
                           {defaultAddress.trim().length > 0
                             ? defaultAddress
@@ -221,14 +221,7 @@ export function CartSidebar({
                     </div>
                   </div>
                   {distanceLoading && (
-                    <p className="text-xs text-gray-500">Dang kiem tra khoang cach giao hang...</p>
-                  )}
-                  {!distanceLoading && distanceInfo && (
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                      <span>Khoang cach: {distanceInfo.distanceKm} km</span>
-                      <span>|</span>
-                      <span>Ban kinh: {distanceInfo.deliveryRadiusKm} km</span>
-                    </div>
+                    <p className="text-xs text-gray-500">Checking delivery eligibility...</p>
                   )}
                   {!distanceLoading && distanceInfo && (
                     <div
@@ -238,12 +231,12 @@ export function CartSidebar({
                           : 'bg-red-100 text-red-700'
                       }`}
                     >
-                      {distanceInfo.withinRadius ? 'Trong pham vi giao hang' : 'Ngoai pham vi giao hang'}
+                      {distanceInfo.withinRadius ? 'Eligible for delivery' : 'Outside delivery area'}
                     </div>
                   )}
                   {!hasCoords && (
                     <p className="text-xs text-red-600">
-                      Chua co toa do dia chi. Vui long cap nhat dia chi trong ho so.
+                      Missing delivery coordinates. Please update your address.
                     </p>
                   )}
                   {distanceError && (
@@ -267,11 +260,11 @@ export function CartSidebar({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPaymentMethod('WALLET')}
-                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                      onClick={() => alert("The feature is currently being rolled out")}
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors opacity-60 hover:opacity-100 ${
                         paymentMethod === 'WALLET'
                           ? 'border-red-600 bg-red-50 text-red-700'
-                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:bg-red-50'
                       }`}
                     >
                       WALLET

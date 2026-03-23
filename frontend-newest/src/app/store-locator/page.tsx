@@ -37,7 +37,7 @@ export default function StoreLocatorPage() {
 
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
-      toast.error('Trinh duyet khong ho tro lay vi tri.');
+      toast.error('Browser does not support Geolocation.');
       return;
     }
 
@@ -54,14 +54,14 @@ export default function StoreLocatorPage() {
           setDistanceInfo(response);
         } catch (error) {
           console.error('[StoreLocator] getStoreDistance failed', error);
-          toast.error('Khong the tinh khoang cach. Vui long thu lai.');
+          toast.error('Could not calculate distance. Please try again.');
         } finally {
           setLoadingDistance(false);
         }
       },
       (error) => {
         console.warn('[StoreLocator] geolocation error', error);
-        toast.error('Khong lay duoc vi tri. Vui long bat quyen Location.');
+        toast.error('Could not get location. Please enable Location permissions.');
         setLoadingDistance(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 },
@@ -74,9 +74,6 @@ export default function StoreLocatorPage() {
       <main className="container mx-auto px-4 lg:px-8 py-16">
         <div className="max-w-4xl space-y-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Store Locator</h1>
-          <p className="text-lg text-gray-600">
-            Vi tri nha hang va khoang cach giao hang se duoc tinh tu he thong backend.
-          </p>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -89,7 +86,7 @@ export default function StoreLocatorPage() {
                 </div>
                 {distanceInfo && (
                   <div className="text-sm text-gray-600">
-                    Khoang cach tu vi tri cua ban: {distanceInfo.distanceKm} km
+                    Distance from your location: {distanceInfo.distanceKm} km
                   </div>
                 )}
                 {distanceInfo && (
@@ -100,7 +97,7 @@ export default function StoreLocatorPage() {
                         : 'bg-red-100 text-red-700'
                     }`}
                   >
-                    {distanceInfo.withinRadius ? 'Trong pham vi giao hang' : 'Ngoai pham vi giao hang'}
+                    {distanceInfo.withinRadius ? 'Eligible for delivery' : 'Outside delivery area'}
                   </div>
                 )}
               </div>
@@ -111,7 +108,7 @@ export default function StoreLocatorPage() {
                   disabled={loadingDistance}
                   className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
                 >
-                  {loadingDistance ? 'Dang tinh khoang cach...' : 'Tinh khoang cach tu vi tri cua ban'}
+                  {loadingDistance ? 'Calculating distance...' : 'Calculate distance from your location'}
                 </button>
                 <a
                   href={mapUrl}

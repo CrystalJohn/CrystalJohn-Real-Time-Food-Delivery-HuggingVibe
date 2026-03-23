@@ -6,7 +6,7 @@ import axios, {
 } from 'axios';
 import { authStorage } from '@/features/auth/auth.storage';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 const AUTH_ENDPOINT_PREFIXES = ['/auth/login', '/auth/register'];
 const AUTH_PAGES = ['/login', '/register'];
@@ -43,7 +43,7 @@ function shouldRedirectOnUnauthorized(error: AxiosError): boolean {
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
   },

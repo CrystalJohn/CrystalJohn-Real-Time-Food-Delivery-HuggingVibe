@@ -12,14 +12,13 @@ export const ROUTES = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Static UI Config — không phải API, không đặt vào mocks/
+// Static UI Config
 // ---------------------------------------------------------------------------
 
 /** Header navigation links */
 export const NAV_LINKS = [
   { href: '/promotions', label: 'Promotions' },
   { href: '/menu', label: 'Menu' },
-  { href: '/tracking-order', label: 'Tracking Order' },
 ] as const;
 
 /** Footer — menu category links */
@@ -60,7 +59,7 @@ export const PRODUCT_TABS = [
 ] as const;
 
 /**
- * Style cho promo banners trang chủ — UI-only, backend không trả về.
+ * Style cho promo banners trang chủ — UI-only
  * Index tương ứng với thứ tự banner trong MOCK_PROMO_BANNERS / API response.
  */
 export const PROMO_BANNER_STYLES = [
