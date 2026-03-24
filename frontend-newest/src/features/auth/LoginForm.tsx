@@ -66,7 +66,9 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      await login({ email, password });
+      const trimmedEmail = email.trim().toLowerCase();
+      const trimmedPassword = password.trim();
+      await login({ email: trimmedEmail, password: trimmedPassword });
     } catch (err) {
       let message = 'Login failed. Please try again.';
       if (err instanceof ApiError) {

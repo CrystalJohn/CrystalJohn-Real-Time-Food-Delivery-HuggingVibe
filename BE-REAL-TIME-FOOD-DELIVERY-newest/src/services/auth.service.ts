@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -9,6 +10,7 @@ import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from '../entities/user.entity';
+import { UpdateProfileDto } from '../dto/auth/update-profile.dto';
 import { Customer } from '../entities/customer.entity';
 import { Wallet } from '../entities/wallet.entity';
 import { Address } from '../entities/address.entity';
@@ -155,6 +157,122 @@ export class AuthService {
       throw new UnauthorizedException('User not found or inactive');
     }
 
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      phone: user.phone,
+      defaultAddress: this.mapDefaultAddress(
+        user.customerProfile?.defaultAddress ?? null,
+      ),
+    };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const wantsAddressUpdate =
+      dto.fullAddress !== undefined ||
+      dto.lat !== undefined ||
+      dto.lng !== undefined;
+
+    const wantsBasicUpdate =
+      dto.fullName !== undefined || dto.phone !== undefined;
+
+    if (!wantsBasicUpdate && !wantsAddressUpdate) {
+      throw new BadRequestException('No profile fields provided');
+    }
+
+    if (
+      wantsAddressUpdate &&
+      (!dto.fullAddress?.trim() ||
+        dto.lat === undefined ||
+        dto.lng === undefined)
+    ) {
+      throw new BadRequestException(
+        'To update address, fullAddress, lat and lng are all required',
+      );
+    }
+
+    const updatedUser = await this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+        relations: ['customerProfile', 'customerProfile.defaultAddress'],
+      });
+
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException('User not found or inactive');
+      }
+
+      if (dto.fullName !== undefined) {
+        user.fullName = dto.fullName.trim();
+      }
+
+      if (dto.phone !== undefined) {
+        user.phone = dto.phone.trim();
+      }
+
+      await manager.save(User, user);
+
+      if (wantsAddressUpdate) {
+        if (user.role !== UserRole.CUSTOMER || !user.customerProfile) {
+          throw new BadRequestException(
+            'Only customer accounts can update default address here',
+          );
+        }
+
+        const addressPayload = {
+          fullAddress: dto.fullAddress!.trim(),
+          lat: dto.lat!,
+          lng: dto.lng!,
+        };
+
+        if (user.customerProfile.defaultAddress) {
+          user.customerProfile.defaultAddress.fullAddress =
+            addressPayload.fullAddress;
+          user.customerProfile.defaultAddress.lat = addressPayload.lat;
+          user.customerProfile.defaultAddress.lng = addressPayload.lng;
+          user.customerProfile.defaultAddress.isDefault = true;
+
+          await manager.save(Address, user.customerProfile.defaultAddress);
+        } else {
+          const createdAddress = manager.create(Address, {
+            userId: user.id,
+            fullAddress: addressPayload.fullAddress,
+            lat: addressPayload.lat,
+            lng: addressPayload.lng,
+            isDefault: true,
+          });
+
+          const savedAddress = await manager.save(Address, createdAddress);
+
+          user.customerProfile.defaultAddress = savedAddress;
+          await manager.save(Customer, user.customerProfile);
+        }
+      }
+
+      return manager.findOne(User, {
+        where: { id: userId },
+        relations: ['customerProfile', 'customerProfile.defaultAddress'],
+      });
+    });
+
+    if (!updatedUser) {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      fullName: updatedUser.fullName,
+      role: updatedUser.role,
+      phone: updatedUser.phone,
+      defaultAddress: this.mapDefaultAddress(
+        updatedUser.customerProfile?.defaultAddress ?? null,
+      ),
+    };
+  }
+
+  private mapAuthUser(user: User) {
     return {
       id: user.id,
       email: user.email,

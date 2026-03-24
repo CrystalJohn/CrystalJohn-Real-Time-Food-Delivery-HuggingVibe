@@ -373,11 +373,11 @@ export function RegisterForm() {
           </p>
         )}
 
-        {coords && (
+        {/* {coords && (
           <p className="text-xs text-emerald-700">
             Lat: {coords.lat.toFixed(6)} | Lng: {coords.lng.toFixed(6)}
           </p>
-        )}
+        )} */}
 
         {fieldErrors.fullAddress && <p className="text-xs text-red-600">{fieldErrors.fullAddress}</p>}
         {!fieldErrors.fullAddress && (fieldErrors.lat || fieldErrors.lng) && (

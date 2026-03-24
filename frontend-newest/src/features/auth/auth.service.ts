@@ -1,6 +1,6 @@
 // API adapter for auth contracts
-import { api } from '@/lib/api';
-import type { User } from '@/types';
+import { api } from "@/lib/api";
+import type { User } from "@/types";
 
 export interface LoginRequest {
   email: string;
@@ -20,6 +20,14 @@ export interface RegisterRequest {
   fullAddress: string;
   lat: number;
   lng: number;
+}
+
+export interface UpdateProfileRequest {
+  fullName?: string;
+  phone?: string;
+  fullAddress?: string;
+  lat?: number;
+  lng?: number;
 }
 
 interface AuthUserPayload {
@@ -54,18 +62,18 @@ interface RegisterPayload {
 
 function mapAuthUser(user: AuthUserPayload): User {
   const hasDefaultAddress = Boolean(user.defaultAddress?.fullAddress);
-  const normalizedRole = (user.role ?? 'CUSTOMER').toUpperCase();
+  const normalizedRole = (user.role ?? "CUSTOMER").toUpperCase();
 
   return {
     id: user.id,
     email: user.email,
     name: user.fullName,
-    role: normalizedRole as User['role'],
+    role: normalizedRole as User["role"],
     phone: user.phone,
     defaultAddress: hasDefaultAddress
       ? {
           id: user.defaultAddress?.id,
-          fullAddress: user.defaultAddress?.fullAddress ?? '',
+          fullAddress: user.defaultAddress?.fullAddress ?? "",
           lat: user.defaultAddress?.lat,
           lng: user.defaultAddress?.lng,
           isDefault: user.defaultAddress?.isDefault,
@@ -83,7 +91,7 @@ function mapLoginResponse(response: AuthResponsePayload): LoginResponse {
 
 export const authService = {
   async login(data: LoginRequest): Promise<LoginResponse> {
-    const response = await api.post<AuthResponsePayload>('/auth/login', data);
+    const response = await api.post<AuthResponsePayload>("/auth/login", data);
     return mapLoginResponse(response);
   },
 
@@ -99,14 +107,19 @@ export const authService = {
     };
 
     const response = await api.post<AuthResponsePayload>(
-      '/auth/register/customer',
+      "/auth/register/customer",
       payload,
     );
     return mapLoginResponse(response);
   },
 
   async me(): Promise<User> {
-    const user = await api.get<AuthUserPayload>('/auth/me');
+    const user = await api.get<AuthUserPayload>("/auth/me");
+    return mapAuthUser(user);
+  },
+
+  async updateProfile(data: UpdateProfileRequest): Promise<User> {
+    const user = await api.patch<AuthUserPayload>("/auth/profile", data);
     return mapAuthUser(user);
   },
 };

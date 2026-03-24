@@ -47,7 +47,9 @@ export function CartSidebar({
   onCheckout,
   checkoutLoading = false,
 }: CartSidebarProps) {
+  const deliveryFee = 30000;
   const totalAmount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const totalWithFee = totalAmount + deliveryFee;
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [distanceInfo, setDistanceInfo] = useState<StoreDistanceResponse | null>(null);
   const [distanceLoading, setDistanceLoading] = useState(false);
@@ -192,11 +194,19 @@ export function CartSidebar({
             </div>
 
             {items.length > 0 && (
+              // Delivery Fee
               <div className="bg-white border-t border-gray-100 p-4 pb-8 space-y-4 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.05)]">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 font-medium">Delivery Fee</span>
+                  <span className="text-base font-semibold text-gray-700">
+                    {currencyFormatter.format(deliveryFee)} VND
+                  </span>
+                </div>
+                {/* Total CartSideBar */}
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500 font-medium">Total</span>
                   <span className="text-2xl font-black text-red-600">
-                    {currencyFormatter.format(totalAmount)} VND
+                    {currencyFormatter.format(totalWithFee)} VND
                   </span>
                 </div>
 

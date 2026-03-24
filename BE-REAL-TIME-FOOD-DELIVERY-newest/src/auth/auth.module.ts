@@ -11,13 +11,15 @@ import { AuthController } from 'src/controllers/auth.controller';
 import { AuthService } from 'src/services/auth.service';
 import { JwtStrategy } from './jwt.strategy';
 
+import { jwtConfig } from '../config/jwt.config';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Customer, Wallet]),
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'super-secret-key',
-      signOptions: { expiresIn: '7d' },
+      secret: jwtConfig.secret,
+      signOptions: { expiresIn: jwtConfig.expiresIn },
     }),
   ],
   controllers: [AuthController],

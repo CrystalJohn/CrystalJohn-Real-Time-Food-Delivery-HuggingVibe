@@ -20,7 +20,6 @@ import { OrderItem } from './entities/order-item.entity';
 import { Wallet } from './entities/wallet.entity';
 import { WalletTransaction } from './entities/wallet-transaction.entity';
 
-import { AuthController } from './controllers/auth.controller';
 import { MenuController } from './controllers/menu.controller';
 import { CartController } from './controllers/cart.controller';
 import { OrderController } from './controllers/order.controller';
@@ -31,7 +30,6 @@ import { AdminController } from './controllers/admin.controller';
 import { DriverProfileController } from './controllers/driver-profile.controller';
 import { StoreController } from './controllers/store.controller';
 
-import { AuthService } from './services/auth.service';
 import { MenuService } from './services/menu.service';
 import { CartService } from './services/cart.service';
 import { OrderService } from './services/order.service';
@@ -41,7 +39,6 @@ import { AdminService } from './services/admin.service';
 import { DriverProfileService } from './services/driver-profile.service';
 import { StoreService } from './services/store.service';
 
-import { JwtStrategy } from './auth/jwt.strategy';
 import { AuthModule } from './auth/auth.module';
 
 import { MenuCategoryRepository } from './repositories/menu-category.repository';
@@ -87,7 +84,6 @@ import { TrackingGateway } from './gateways/tracking.gateway';
     }),
   ],
   controllers: [
-    AuthController,
     MenuController,
     CartController,
     OrderController,
@@ -99,7 +95,6 @@ import { TrackingGateway } from './gateways/tracking.gateway';
     StoreController,
   ],
   providers: [
-    AuthService,
     MenuService,
     CartService,
     OrderService,
@@ -108,7 +103,6 @@ import { TrackingGateway } from './gateways/tracking.gateway';
     AdminService,
     DriverProfileService,
     StoreService,
-    JwtStrategy,
     MenuCategoryRepository,
     MenuItemRepository,
     CustomerRepository,

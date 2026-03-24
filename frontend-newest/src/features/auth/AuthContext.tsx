@@ -1,4 +1,3 @@
-// state + login/register/logout logic, exposed through context
 "use client";
 
 import { createContext, useState, useEffect, type ReactNode } from "react";
@@ -7,6 +6,7 @@ import {
   authService,
   type LoginRequest,
   type RegisterRequest,
+  type UpdateProfileRequest,
 } from "./auth.service";
 import { authStorage } from "./auth.storage";
 
@@ -15,6 +15,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
+  updateProfile: (data: UpdateProfileRequest) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -50,15 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginRequest) => {
     const response = await authService.login(data);
     authStorage.setToken(response.token);
-
-    const currentUser = await authService.me();
-    setUser(currentUser);
+    setUser(response.user);
   };
 
   const register = async (data: RegisterRequest) => {
     const response = await authService.register(data);
     authStorage.setToken(response.token);
     setUser(response.user);
+  };
+
+  const updateProfile = async (data: UpdateProfileRequest) => {
+    const updatedUser = await authService.updateProfile(data);
+    setUser(updatedUser);
   };
 
   const logout = () => {
@@ -73,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         login,
         register,
+        updateProfile,
         logout,
         isAuthenticated: !!user,
       }}

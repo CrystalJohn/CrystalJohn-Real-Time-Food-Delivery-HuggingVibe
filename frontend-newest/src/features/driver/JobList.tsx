@@ -209,7 +209,9 @@ const handleAction = async (job: DeliveryJob, action: 'pickup' | 'deliver') => {
       console.info('[DriverJobList.location_synced]', { orderId });
     } catch (err) {
       console.error('[DriverJobList.location_sync_failed]', { orderId, err });
-      toast.error('Failed to update current location.');
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      // Thêm message chi tiết vào toast để biết lỗi từ đâu:
+      toast.error(`Trượt lấy vị trí / cập nhật: ${message}`);
     } finally {
       setSyncingLocation(false);
     }

@@ -13,7 +13,7 @@ export default function OrdersPage() {
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 60000); 
+    }, 1000); 
 
     return () => clearInterval(interval);
   }, [refetch]);
@@ -29,7 +29,7 @@ export default function OrdersPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Đơn hàng của tôi</h1>
+      <h1 className="text-3xl font-bold mb-6">My Orders</h1>
 
       <div className="flex space-x-1 mb-6 bg-gray-100/50 p-1.5 rounded-xl">
         <button
@@ -40,7 +40,7 @@ export default function OrdersPage() {
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Đang xử lý ({activeOrders.length})
+          Active ({activeOrders.length})
         </button>
         <button
           onClick={() => setActiveTab('history')}
@@ -50,13 +50,13 @@ export default function OrdersPage() {
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Lịch sử ({historyOrders.length})
+          History ({historyOrders.length})
         </button>
       </div>
 
       {loading && !orders.length && (
         <div className="flex justify-center py-12">
-          <p className="text-gray-500">Đang tải...</p>
+          <p className="text-gray-500">Loading...</p>
         </div>
       )}
 

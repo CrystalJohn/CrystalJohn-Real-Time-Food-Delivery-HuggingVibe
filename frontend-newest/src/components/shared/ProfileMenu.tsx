@@ -89,7 +89,7 @@ export function ProfileMenu({
               <p className="text-sm font-semibold text-gray-900">
                 {user?.name || "-"}
               </p>
-              <p className="text-xs text-gray-500">Role: {user?.role || "-"}</p>
+              {/* <p className="text-xs text-gray-500">Role: {user?.role || "-"}</p> */}
               <p className="text-xs text-gray-500">
                 Email: {user?.email || "-"}
               </p>
@@ -114,6 +114,14 @@ export function ProfileMenu({
               {isCustomer && (
                 <>
                   <Link
+                    href="/profile"
+                    role="menuitem"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    My Profile
+                  </Link>
+                  <Link
                     href="/orders"
                     role="menuitem"
                     onClick={() => setIsOpen(false)}
@@ -121,14 +129,14 @@ export function ProfileMenu({
                   >
                     My Orders
                   </Link>
-                  <Link
+                  {/* <Link
                     href="/cart"
                     role="menuitem"
                     onClick={() => setIsOpen(false)}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     Cart
-                  </Link>
+                  </Link> */}
                 </>
               )}
 
